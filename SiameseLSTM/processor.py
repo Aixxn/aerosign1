@@ -7,7 +7,7 @@ import random
 from scipy import interpolate
 from collections import defaultdict
 from sklearn.preprocessing import StandardScaler
-from config import TRAINING_CONFIG
+from SiameseLSTM.config import TRAINING_CONFIG
 
 class SignatureProcessor:
     """Loads, normalizes and interpolates the signatures"""

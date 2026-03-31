@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from config import TRAINING_CONFIG
+from SiameseLSTM.config import TRAINING_CONFIG
 
 class ContrastiveLoss(nn.Module):
     """Contrastive Loss function"""

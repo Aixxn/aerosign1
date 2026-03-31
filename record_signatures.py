@@ -20,10 +20,10 @@ import platform
 # Configuration constants
 CAMERA_NUMBER = 0
 DIST_MAX = 80
-CAM_WIDTH = 2000
-CAM_HEIGHT = 1000
-SIGNATURE_AREA_P1 = (450, 150)
-SIGNATURE_AREA_P2 = (1250, 400)
+CAM_WIDTH = 640
+CAM_HEIGHT = 480
+SIGNATURE_AREA_P1 = (100, 100) 
+SIGNATURE_AREA_P2 = (540, 350) 
 
 
 class SignatureCapture:
@@ -108,6 +108,15 @@ class SignatureCapture:
     
     def save_signature(self):
         "Save the captured signature to a file"
+        # FIX: Append any currently drawing stroke before saving
+        if len(self.coords) > 0:
+            self.npCoords.append(self.coords)
+            self.coords = []
+
+        if not self.npCoords:
+            print("Warning: No signature coordinates captured!")
+            return
+                
         with open(os.path.join(self.save_path, f"{self.nxt}.txt"), "w") as txt_file:
             for crd in self.npCoords:
                 for line in crd:
@@ -117,7 +126,6 @@ class SignatureCapture:
                         line[2]
                     ]
                     txt_file.write(", ".join(map(str, adjusted_line)) + "\n")
-                    cv2.destroyAllWindows()
                 txt_file.write("-100, -100\n")
     
     def process_hand_landmarks(self, hand_landmarks, image_width, image_height):

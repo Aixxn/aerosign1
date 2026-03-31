@@ -4,11 +4,11 @@ import torch
 import itertools
 import pickle
 from torch.utils.data import Dataset, DataLoader
-from visualization import plot_training_distance_distribution, plot_results
-from evaluation import evaluate_model
-from processor import SignatureProcessor, create_balanced_pairs
-from config import device, MODEL_CONFIG, TRAINING_CONFIG, OUTPUT_DIRECTORY
-from model import ContrastiveLoss, SiameseLSTM
+from SiameseLSTM.visualization import plot_training_distance_distribution, plot_results
+from SiameseLSTM.evaluation import evaluate_model
+from SiameseLSTM.processor import SignatureProcessor, create_balanced_pairs
+from SiameseLSTM.config import device, MODEL_CONFIG, TRAINING_CONFIG, OUTPUT_DIRECTORY
+from SiameseLSTM.model import ContrastiveLoss, SiameseLSTM
 
 class SiameseDataset(Dataset):
     """PyTorch Dataset class"""

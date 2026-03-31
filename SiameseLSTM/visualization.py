@@ -3,7 +3,7 @@ import torch
 import os
 import numpy as np
 from sklearn.metrics import roc_curve, auc, confusion_matrix, ConfusionMatrixDisplay
-from config import device, OUTPUT_DIRECTORY
+from SiameseLSTM.config import device, OUTPUT_DIRECTORY
 
 def plot_results(train_losses, val_losses, y_test, distances, predictions, test_persons, threshold):
 
