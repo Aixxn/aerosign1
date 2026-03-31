@@ -17,7 +17,6 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   const [stability, setStability] = useState([1, 1, 1, 0])
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 })
   const [isCapturing, setIsCapturing] = useState(false)
-  const [isModelActive, setIsModelActive] = useState(false)
   const [modelConnectionStatus, setModelConnectionStatus] = useState('checking') // 'online', 'offline', 'checking'
 
   // Refs for data accessed in animation loop (not state!)
@@ -28,7 +27,6 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   // Refs for preventing excessive state updates in animation loop
   const lastLatencyRef = useRef(0)
   const lastConfidenceRef = useRef(0)
-  const lastModelActiveRef = useRef(false)
   const lastConnectionStatusRef = useRef('checking')
 
   // Other refs for tracking
@@ -264,12 +262,6 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
       // Send frame to backend for hand detection
       processingRef.current = true
       
-      // Only update model active state if it changed
-      if (!lastModelActiveRef.current) {
-        setIsModelActive(true)
-        lastModelActiveRef.current = true
-      }
-      
       const imageData = canvas.toDataURL('image/jpeg', 0.7)
 
       try {
@@ -284,12 +276,6 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
         if (Math.abs(processingTime - lastLatencyRef.current) > 10) {
           setLatency(processingTime)
           lastLatencyRef.current = processingTime
-        }
-        
-        // Only update model active state if it changed
-        if (lastModelActiveRef.current) {
-          setIsModelActive(false)
-          lastModelActiveRef.current = false
         }
 
         if (handData.detected && handData.index_finger) {
@@ -367,12 +353,6 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
         if (Math.abs(999 - lastLatencyRef.current) > 10) {
           setLatency(999)
           lastLatencyRef.current = 999
-        }
-        
-        // Only update model active state if it changed
-        if (lastModelActiveRef.current) {
-          setIsModelActive(false)
-          lastModelActiveRef.current = false
         }
         
         // Check if error indicates model connectivity issue (debounced)
@@ -460,28 +440,23 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
             </div>
 
             <div className="status-right">
-              {/* AI Model Activity/Connection Indicator */}
+              {/* Model Connection Status - Simplified Online/Offline */}
               {modelConnectionStatus === 'offline' ? (
                 <div className="ai-model-indicator offline">
                   <span className="material-symbols-outlined">cloud_off</span>
-                  <span className="status-text">Model Offline</span>
+                  <span className="status-text">Offline</span>
                 </div>
               ) : modelConnectionStatus === 'checking' ? (
                 <div className="ai-model-indicator checking">
-                  <span className="material-symbols-outlined animate-spin">refresh</span>
-                  <span className="status-text">Checking Model</span>
+                  <span className="material-symbols-outlined animate-spin">sync</span>
+                  <span className="status-text">Checking</span>
                 </div>
-              ) : isModelActive ? (
-                <div className="ai-model-indicator active">
-                  <span className="material-symbols-outlined animate-spin">psychology</span>
-                  <span className="status-text">AI Processing</span>
+              ) : (
+                <div className="ai-model-indicator online">
+                  <span className="material-symbols-outlined">check_circle</span>
+                  <span className="status-text">Online</span>
                 </div>
-              ) : fingerDistance > 0 && fingerDistance < DISTANCE_THRESHOLD ? (
-                <div className="distance-warning">
-                  <span className="material-symbols-outlined">warning</span>
-                  <span>Move Back</span>
-                </div>
-              ) : null}
+              )}
             </div>
           </div>
 
@@ -618,22 +593,17 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
             <div className="ai-status-indicator">
               {modelConnectionStatus === 'checking' ? (
                 <div className="ai-checking">
-                  <span className="material-symbols-outlined animate-spin">refresh</span>
-                  <span className="ai-status-text">Checking...</span>
+                  <span className="material-symbols-outlined animate-spin">sync</span>
+                  <span className="ai-status-text">Checking</span>
                 </div>
               ) : modelConnectionStatus === 'offline' ? (
                 <div className="ai-offline">
                   <span className="material-symbols-outlined">cloud_off</span>
                   <span className="ai-status-text">Offline</span>
                 </div>
-              ) : isModelActive ? (
-                <div className="ai-active">
-                  <span className="material-symbols-outlined animate-spin">psychology</span>
-                  <span className="ai-status-text">Processing</span>
-                </div>
               ) : (
                 <div className="ai-online">
-                  <span className="material-symbols-outlined">psychology</span>
+                  <span className="material-symbols-outlined">check_circle</span>
                   <span className="ai-status-text">Online</span>
                 </div>
               )}

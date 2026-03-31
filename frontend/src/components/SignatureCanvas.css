@@ -688,6 +688,13 @@
   border-color: rgba(3, 105, 161, 0.3);
 }
 
+.ai-model-indicator.online {
+  background: linear-gradient(135deg, var(--tertiary-container) 0%, #e8f5e8 100%);
+  color: var(--on-tertiary-container);
+  border-color: rgba(56, 142, 60, 0.3);
+  box-shadow: 0 2px 8px rgba(56, 142, 60, 0.2);
+}
+
 .ai-model-indicator.offline {
   background: linear-gradient(135deg, var(--error-container) 0%, #ffebee 100%);
   color: var(--on-error-container);
@@ -705,6 +712,10 @@
 
 .ai-model-indicator.checking .material-symbols-outlined {
   color: var(--primary);
+}
+
+.ai-model-indicator.online .material-symbols-outlined {
+  color: var(--tertiary);
 }
 
 .ai-model-indicator.offline .material-symbols-outlined {
