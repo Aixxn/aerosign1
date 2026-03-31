@@ -25,43 +25,67 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   const savedStrokesRef = useRef([])
   const isCapturingRef = useRef(false)
 
+  // Refs for preventing excessive state updates in animation loop
+  const lastLatencyRef = useRef(0)
+  const lastConfidenceRef = useRef(0)
+  const lastModelActiveRef = useRef(false)
+  const lastConnectionStatusRef = useRef('checking')
+
   // Other refs for tracking
   const startTimeRef = useRef(Date.now())
   const lastPointTimeRef = useRef(0)
   const processingRef = useRef(false)
   const frameStartRef = useRef(Date.now())
+  const modelStatusDebounceRef = useRef(null)
 
   // Bounding box dimensions (matching backend)
   const SIGNATURE_AREA_P1 = { x: 100, y: 100 }
   const SIGNATURE_AREA_P2 = { x: 540, y: 350 }
   const DISTANCE_THRESHOLD = 80  // Must match backend DIST_MAX
 
-  // Check siameseLSTM model connectivity
+  // Debounced model status update to prevent rapid flickering
+  const updateModelStatusDebounced = (newStatus) => {
+    // Clear existing timeout
+    if (modelStatusDebounceRef.current) {
+      clearTimeout(modelStatusDebounceRef.current)
+    }
+    
+    // Set new timeout
+    modelStatusDebounceRef.current = setTimeout(() => {
+      if (lastConnectionStatusRef.current !== newStatus) {
+        setModelConnectionStatus(newStatus)
+        lastConnectionStatusRef.current = newStatus
+      }
+    }, 500) // 500ms debounce
+  }
+
+  // Check siameseLSTM model connectivity (debounced)
   const checkModelConnection = useCallback(async () => {
     try {
       const response = await apiClient.get('/health', { timeout: 5000 })
       
       if (response.data && response.data.status === 'ok') {
-        setModelConnectionStatus('online')
+        // Only update if actually changed to prevent unnecessary re-renders
+        setModelConnectionStatus(prev => prev !== 'online' ? 'online' : prev)
       } else {
-        setModelConnectionStatus('offline')
+        setModelConnectionStatus(prev => prev !== 'offline' ? 'offline' : prev)
       }
     } catch (err) {
       console.warn('Model health check failed:', err.message)
-      setModelConnectionStatus('offline')
+      setModelConnectionStatus(prev => prev !== 'offline' ? 'offline' : prev)
     }
   }, [])
 
-  // Periodic model health check
+  // Periodic model health check - Fixed dependency array
   useEffect(() => {
     // Initial check
     checkModelConnection()
     
-    // Set up periodic health checks every 10 seconds
-    const healthCheckInterval = setInterval(checkModelConnection, 10000)
+    // Set up periodic health checks every 15 seconds (increased interval)
+    const healthCheckInterval = setInterval(checkModelConnection, 15000)
     
     return () => clearInterval(healthCheckInterval)
-  }, [checkModelConnection])
+  }, []) // ✅ Empty dependency array prevents re-creation
 
   // Start camera on mount
   useEffect(() => {
@@ -86,6 +110,10 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop())
+      }
+      // Clean up debounce timeout
+      if (modelStatusDebounceRef.current) {
+        clearTimeout(modelStatusDebounceRef.current)
       }
     }
   }, [])
@@ -235,7 +263,13 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
 
       // Send frame to backend for hand detection
       processingRef.current = true
-      setIsModelActive(true)
+      
+      // Only update model active state if it changed
+      if (!lastModelActiveRef.current) {
+        setIsModelActive(true)
+        lastModelActiveRef.current = true
+      }
+      
       const imageData = canvas.toDataURL('image/jpeg', 0.7)
 
       try {
@@ -245,8 +279,18 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
 
         const handData = response.data
         const processingTime = Date.now() - frameStartRef.current
-        setLatency(processingTime)
-        setIsModelActive(false)
+        
+        // Only update latency if significantly changed (>10ms difference)
+        if (Math.abs(processingTime - lastLatencyRef.current) > 10) {
+          setLatency(processingTime)
+          lastLatencyRef.current = processingTime
+        }
+        
+        // Only update model active state if it changed
+        if (lastModelActiveRef.current) {
+          setIsModelActive(false)
+          lastModelActiveRef.current = false
+        }
 
         if (handData.detected && handData.index_finger) {
           const indexX = handData.index_finger[0]
@@ -257,15 +301,22 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
           setFingerDistance(Math.round(dist))
           setHandPosition({ x: indexX, y: indexY })
           
-          // Calculate dynamic confidence based on multiple factors
+          // Calculate dynamic confidence with throttling
+          let newConfidence
           if (handData.confidence) {
-            setConfidence(handData.confidence)
+            newConfidence = handData.confidence
           } else {
             // Calculate confidence based on stability, latency, and detection consistency
             const latencyFactor = Math.max(0, 100 - (processingTime - 50) * 0.5) // Penalty for high latency
             const stabilityScore = stability.reduce((sum, val) => sum + val, 0) / stability.length * 100
             const calculatedConfidence = Math.min(100, (latencyFactor + stabilityScore) / 2)
-            setConfidence(Math.max(75, calculatedConfidence)) // Min 75% when detected
+            newConfidence = Math.max(75, calculatedConfidence) // Min 75% when detected
+          }
+          
+          // Only update confidence if significantly changed (>2% difference)
+          if (Math.abs(newConfidence - lastConfidenceRef.current) > 2) {
+            setConfidence(newConfidence)
+            lastConfidenceRef.current = newConfidence
           }
 
           // Update stability indicator
@@ -297,8 +348,12 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
           }
         } else {
           setIsTracking(false)
-          // Gradually decrease confidence when no hand detected
-          setConfidence(prev => Math.max(0, prev - 2))
+          // Gradually decrease confidence when no hand detected (throttled)
+          if (lastConfidenceRef.current > 0) {
+            const newConfidence = Math.max(0, lastConfidenceRef.current - 2)
+            setConfidence(newConfidence)
+            lastConfidenceRef.current = newConfidence
+          }
           if (currentStrokeRef.current.length > 0) {
             // Hand lost - end current stroke
             savedStrokesRef.current.push([...currentStrokeRef.current])
@@ -307,12 +362,23 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
         }
       } catch (err) {
         console.error('Hand detection error:', err)
-        setLatency(999)
-        setIsModelActive(false)
         
-        // Check if error indicates model connectivity issue
-        if (err.response?.status === 503 || err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-          setModelConnectionStatus('offline')
+        // Only update latency if significantly changed
+        if (Math.abs(999 - lastLatencyRef.current) > 10) {
+          setLatency(999)
+          lastLatencyRef.current = 999
+        }
+        
+        // Only update model active state if it changed
+        if (lastModelActiveRef.current) {
+          setIsModelActive(false)
+          lastModelActiveRef.current = false
+        }
+        
+        // Check if error indicates model connectivity issue (debounced)
+        if ((err.response?.status === 503 || err.code === 'ECONNABORTED' || err.message.includes('timeout')) 
+            && lastConnectionStatusRef.current !== 'offline') {
+          updateModelStatusDebounced('offline')
         }
       }
 
@@ -322,7 +388,7 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
     }
 
     requestAnimationFrame(detectHands)
-  }, [])
+  }, [stability])
 
   return (
     <div className="signature-canvas-page">
