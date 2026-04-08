@@ -189,6 +189,164 @@ class SetActiveModelResponse(BaseModel):
 
 
 # ============================================================================
+# SIGNATURE STORAGE MODELS
+# ============================================================================
+
+class SignatureSaveRequest(BaseModel):
+    """Request to save a captured signature"""
+    signature_data: List[Tuple[float, float, float]] = Field(
+        ...,
+        description="Signature as list of [x, y, timestamp] tuples",
+        min_items=5,
+        max_items=1000
+    )
+    user_id: str = Field(
+        ...,
+        description="Unique identifier for the user",
+        min_length=1,
+        max_length=100
+    )
+    session_id: str = Field(
+        ..., 
+        description="Session identifier",
+        min_length=1,
+        max_length=100
+    )
+    metadata: dict = Field(
+        default={},
+        description="Optional metadata (device info, timestamp, etc.)"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "signature_data": [
+                    [100.0, 200.0, 0.00],
+                    [105.0, 195.0, 0.05],
+                    [110.0, 190.0, 0.10]
+                ],
+                "user_id": "user_12345",
+                "session_id": "session_67890",
+                "metadata": {
+                    "device": "desktop",
+                    "browser": "chrome",
+                    "timestamp": "2024-01-15T10:30:00Z"
+                }
+            }
+        }
+
+
+class SignatureSaveResponse(BaseModel):
+    """Response after saving a signature"""
+    signature_id: str = Field(
+        ...,
+        description="Unique identifier for the saved signature"
+    )
+    saved_successfully: bool = Field(
+        ...,
+        description="Whether the signature was saved successfully"
+    )
+    message: str = Field(
+        ...,
+        description="Success or error message"
+    )
+    user_signature_count: int = Field(
+        default=0,
+        description="Total number of signatures for this user"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "signature_id": "sig_abc123def456",
+                "saved_successfully": True,
+                "message": "Signature saved successfully",
+                "user_signature_count": 3
+            }
+        }
+
+
+class UserSignaturesListResponse(BaseModel):
+    """Response listing user's saved signatures"""
+    user_id: str = Field(..., description="User identifier")
+    signatures: List[dict] = Field(
+        ...,
+        description="List of saved signatures with metadata"
+    )
+    total_count: int = Field(..., description="Total number of signatures")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "user_id": "user_12345",
+                "total_count": 2,
+                "signatures": [
+                    {
+                        "signature_id": "sig_abc123",
+                        "saved_at": "2024-01-15T10:30:00Z",
+                        "point_count": 45,
+                        "session_id": "session_67890"
+                    },
+                    {
+                        "signature_id": "sig_def456", 
+                        "saved_at": "2024-01-15T11:15:00Z",
+                        "point_count": 52,
+                        "session_id": "session_67891"
+                    }
+                ]
+            }
+        }
+
+
+class VerifyAgainstUserRequest(BaseModel):
+    """Request to verify signature against user's saved signatures"""
+    signature_data: List[Tuple[float, float, float]] = Field(
+        ...,
+        description="Signature to verify",
+        min_items=5,
+        max_items=1000
+    )
+    user_id: str = Field(
+        ...,
+        description="User to verify against",
+        min_length=1,
+        max_length=100
+    )
+    threshold_override: float = Field(
+        default=None,
+        description="Override default threshold for matching",
+        ge=0.0,
+        le=2.0
+    )
+
+
+class VerifyAgainstUserResponse(BaseModel):
+    """Response from verifying against user's signatures"""
+    is_same_person: bool = Field(
+        ...,
+        description="Whether signature matches any of user's saved signatures"
+    )
+    best_match_confidence: float = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="Confidence of best match (0-100%)"
+    )
+    matched_signature_id: str = Field(
+        default=None,
+        description="ID of best matching signature if any"
+    )
+    total_signatures_checked: int = Field(
+        ...,
+        description="Number of saved signatures checked against"
+    )
+    verification_details: dict = Field(
+        default={},
+        description="Detailed results for debugging"
+    )
+
+
+# ============================================================================
 # ERROR MODELS
 # ============================================================================
 

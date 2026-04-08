@@ -43,3 +43,65 @@ apiClient.interceptors.response.use(
   }
 )
 
+// ============================================================================
+// SIGNATURE STORAGE API FUNCTIONS
+// ============================================================================
+
+/**
+ * Save a captured signature for a user
+ * @param {string} userId - User identifier
+ * @param {string} sessionId - Session identifier  
+ * @param {Array} signatureData - Array of [x, y, timestamp] points
+ * @param {Object} metadata - Optional metadata
+ * @returns {Promise} API response with signature_id and success status
+ */
+export const saveSignature = async (userId, sessionId, signatureData, metadata = {}) => {
+  const response = await apiClient.post('/api/signatures/save', {
+    user_id: userId,
+    session_id: sessionId,
+    signature_data: signatureData,
+    metadata: metadata
+  })
+  return response.data
+}
+
+/**
+ * Get all saved signatures for a user
+ * @param {string} userId - User identifier
+ * @returns {Promise} API response with user's signatures
+ */
+export const getUserSignatures = async (userId) => {
+  const response = await apiClient.get(`/api/users/${userId}/signatures`)
+  return response.data
+}
+
+/**
+ * Verify a signature against all of a user's saved signatures
+ * @param {string} userId - User identifier
+ * @param {Array} signatureData - Signature to verify
+ * @param {number} thresholdOverride - Optional threshold override
+ * @returns {Promise} API response with verification results
+ */
+export const verifyAgainstUser = async (userId, signatureData, thresholdOverride = null) => {
+  const requestData = {
+    signature_data: signatureData
+  }
+  
+  if (thresholdOverride !== null) {
+    requestData.threshold_override = thresholdOverride
+  }
+  
+  const response = await apiClient.post(`/api/users/${userId}/verify`, requestData)
+  return response.data
+}
+
+/**
+ * Generate a session ID for the current browser session
+ * @returns {string} Session identifier
+ */
+export const generateSessionId = () => {
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).substr(2, 9)
+  return `web_${timestamp}_${random}`
+}
+

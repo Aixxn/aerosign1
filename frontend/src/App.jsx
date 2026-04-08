@@ -12,6 +12,15 @@ function App() {
   const [error, setError] = useState(null)
   const [models, setModels] = useState([])
   const [activeModel, setActiveModel] = useState('combo_1')
+  const [userId] = useState(() => {
+    // Generate or get user ID (in real app, this would come from authentication)
+    const stored = localStorage.getItem('aerosign_user_id')
+    if (stored) return stored
+    
+    const newUserId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    localStorage.setItem('aerosign_user_id', newUserId)
+    return newUserId
+  })
 
   // Fetch models on mount
   useEffect(() => {
@@ -123,6 +132,7 @@ function App() {
         onBack={handleBackToLanding}
         error={error}
         loading={loading}
+        userId={userId}
       />
     )
   }

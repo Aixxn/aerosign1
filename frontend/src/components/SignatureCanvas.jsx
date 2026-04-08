@@ -1,8 +1,8 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import './SignatureCanvas.css'
-import { apiClient } from '../utils/api'
+import { apiClient, saveSignature, verifyAgainstUser, generateSessionId } from '../utils/api'
 
-function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoading }) {
+function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoading, userId = 'user_default' }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -18,6 +18,13 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 })
   const [isCapturing, setIsCapturing] = useState(false)
   const [modelConnectionStatus, setModelConnectionStatus] = useState('checking') // 'online', 'offline', 'checking'
+  
+  // New state for signature storage
+  const [saveStatus, setSaveStatus] = useState(null) // null, 'saving', 'saved', 'error'
+  const [saveMessage, setSaveMessage] = useState('')
+  const [sessionId] = useState(generateSessionId())
+  const [savedSignatureIds, setSavedSignatureIds] = useState([])
+  const [verificationResult, setVerificationResult] = useState(null)
 
   // Refs for data accessed in animation loop (not state!)
   const currentStrokeRef = useRef([])
@@ -155,7 +162,7 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   }, [onBack])
 
   // Handle save signature
-  const handleSaveSignature = () => {
+  const handleSaveSignature = async () => {
     // Finalize current stroke if any
     let finalStrokes = savedStrokesRef.current
     if (currentStrokeRef.current.length > 0) {
@@ -167,30 +174,119 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
       return
     }
 
-    // Adjust coordinates for saving (relative to signature area)
-    const adjustedSignature = finalStrokes.map(stroke =>
-      stroke.map(point => [
-        point[0] - SIGNATURE_AREA_P1.x + 5,
-        point[1] - SIGNATURE_AREA_P1.y + 5,
-        point[2]
-      ])
-    )
+    // Convert strokes to flat array of points for storage
+    const signatureData = finalStrokes.flat().map(point => [
+      point[0] - SIGNATURE_AREA_P1.x + 5,  // Adjust coordinates
+      point[1] - SIGNATURE_AREA_P1.y + 5,  // Adjust coordinates  
+      point[2] || Date.now() - startTimeRef.current  // Use timestamp or relative time
+    ])
 
-    // Store the signature
-    const newCollected = [...collectedSignatures, adjustedSignature]
-    setCollectedSignatures(newCollected)
+    // Validate minimum points (backend requires at least 5 points)
+    if (signatureData.length < 5) {
+      setStatus('Signature too short. Please draw more.')
+      return
+    }
 
-    if (newCollected.length === 1) {
-      // First signature saved
-      setSignatureNumber(2)
-      currentStrokeRef.current = []
-      savedStrokesRef.current = []
-      isCapturingRef.current = false
-      setIsCapturing(false)
-      setStatus('Ready for next signature - Press "Start Capture" or Z key')
-    } else if (newCollected.length === 2) {
-      // Both signatures collected
-      onComplete(newCollected)
+    // Save signature to backend
+    setSaveStatus('saving')
+    setSaveMessage('Saving signature...')
+    setStatus('Saving signature to secure storage...')
+    
+    try {
+      const saveResponse = await saveSignature(
+        userId,
+        sessionId,
+        signatureData,
+        {
+          timestamp: new Date().toISOString(),
+          device: 'web',
+          browser: navigator.userAgent,
+          signature_number: signatureNumber,
+          point_count: signatureData.length
+        }
+      )
+
+      if (saveResponse.saved_successfully) {
+        // Update state
+        const newCollected = [...collectedSignatures, signatureData]
+        setCollectedSignatures(newCollected)
+        setSavedSignatureIds([...savedSignatureIds, saveResponse.signature_id])
+        
+        setSaveStatus('saved')
+        setSaveMessage(`✅ Signature ${signatureNumber} saved successfully!`)
+        setStatus(`Signature ${signatureNumber} saved! (ID: ${saveResponse.signature_id.substr(0, 8)}...)`)
+
+        if (newCollected.length === 1) {
+          // First signature saved - prepare for second
+          setSignatureNumber(2)
+          currentStrokeRef.current = []
+          savedStrokesRef.current = []
+          isCapturingRef.current = false
+          setIsCapturing(false)
+          
+          // Clear save message after 3 seconds
+          setTimeout(() => {
+            setSaveStatus(null)
+            setSaveMessage('')
+            setStatus('Ready for second signature - Press "Start Capture" or Z key')
+          }, 3000)
+          
+        } else if (newCollected.length >= 2) {
+          // Multiple signatures - offer verification
+          setStatus('Multiple signatures saved. Ready for same-person verification!')
+          
+          // Automatically verify against user's saved signatures after 2 seconds
+          setTimeout(async () => {
+            await performUserVerification(signatureData)
+          }, 2000)
+        }
+      } else {
+        throw new Error('Save response indicates failure')
+      }
+      
+    } catch (error) {
+      console.error('Error saving signature:', error)
+      setSaveStatus('error')
+      setSaveMessage(`❌ Failed to save: ${error.message}`)
+      setStatus('Save failed. Try again.')
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => {
+        setSaveStatus(null)
+        setSaveMessage('')
+        setStatus('Ready - Press "Start Capture" or Z key')
+      }, 5000)
+    }
+  }
+
+  // New function to verify against user's saved signatures
+  const performUserVerification = async (currentSignatureData) => {
+    try {
+      setStatus('Verifying if signature matches previous signatures...')
+      
+      const verifyResponse = await verifyAgainstUser(userId, currentSignatureData)
+      setVerificationResult(verifyResponse)
+      
+      if (verifyResponse.is_same_person) {
+        setStatus(`✅ Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        setSaveMessage(`🎯 Same person confirmed (${verifyResponse.total_signatures_checked} signatures checked)`)
+      } else {
+        setStatus(`⚠️ Different person detected. Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        setSaveMessage(`🚨 This appears to be a different person`)
+      }
+      
+      // Clear verification message after 10 seconds
+      setTimeout(() => {
+        setVerificationResult(null)
+        setSaveStatus(null)
+        setSaveMessage('')
+        setStatus('Ready for next signature - Press "Start Capture" or Z key')
+      }, 10000)
+      
+    } catch (error) {
+      console.error('Error verifying signature:', error)
+      setStatus('Verification failed. Signature was saved successfully.')
+      setSaveMessage(`⚠️ Verification error: ${error.message}`)
     }
   }
 
@@ -641,6 +737,44 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
           <div className="signature-progress">
             Signature {signatureNumber} of 2 • {collectedSignatures.length}/2 completed
           </div>
+
+          {/* Save Status Display */}
+          {saveStatus && (
+            <div className={`save-status ${saveStatus}`}>
+              <span className="material-symbols-outlined">
+                {saveStatus === 'saving' ? 'upload' : 
+                 saveStatus === 'saved' ? 'check_circle' : 'error'}
+              </span>
+              {saveMessage}
+            </div>
+          )}
+
+          {/* Verification Results Display */}
+          {verificationResult && (
+            <div className={`verification-result ${verificationResult.is_same_person ? 'match' : 'no-match'}`}>
+              <div className="verification-header">
+                <span className="material-symbols-outlined">
+                  {verificationResult.is_same_person ? 'verified_user' : 'gpp_bad'}
+                </span>
+                <span className="verification-title">
+                  {verificationResult.is_same_person ? 'Same Person Verified' : 'Different Person Detected'}
+                </span>
+              </div>
+              <div className="verification-details">
+                <div className="verification-confidence">
+                  Confidence: {verificationResult.best_match_confidence.toFixed(1)}%
+                </div>
+                <div className="verification-info">
+                  Checked against {verificationResult.total_signatures_checked} saved signatures
+                </div>
+                {verificationResult.matched_signature_id && (
+                  <div className="verification-match">
+                    Best match: {verificationResult.matched_signature_id.substr(0, 8)}...
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="status-message">{status}</div>
         </div>

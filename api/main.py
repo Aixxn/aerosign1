@@ -1,12 +1,12 @@
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import base64
 import cv2
 import numpy as np
 
-from api.config import CORS_ORIGINS, API_HOST, API_PORT, DEBUG, LOG_LEVEL
+from api.config import CORS_ORIGINS, API_HOST, API_PORT, DEBUG, LOG_LEVEL, PRODUCTION_MODE
 from api.utils import model_loader, initialize_models
 from api.hand_detection import get_hand_detector, initialize_hand_detector
 from api.schemas import (
@@ -16,9 +16,16 @@ from api.schemas import (
     ModelsListResponse,
     SetActiveModelResponse,
     ErrorResponse,
-    APIInfoResponse
+    APIInfoResponse,
+    SignatureSaveRequest,
+    SignatureSaveResponse,
+    UserSignaturesListResponse,
+    VerifyAgainstUserRequest,
+    VerifyAgainstUserResponse
 )
 from api.inference import verify_signatures
+from api.storage import get_signature_storage
+from api.security import rate_limit_middleware, validate_request_data, input_validator
 
 logging.basicConfig(
     level=LOG_LEVEL,
@@ -30,10 +37,13 @@ app = FastAPI(
     title="Aerosign API",
     description="Real-time signature verification using Siamese LSTM neural networks",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    docs_url="/docs" if not PRODUCTION_MODE else None,  # Disable Swagger UI in production
+    redoc_url="/redoc" if not PRODUCTION_MODE else None,  # Disable ReDoc in production  
+    openapi_url="/openapi.json" if not PRODUCTION_MODE else None  # Disable OpenAPI schema in production
 )
+
+# Security middleware (must be added before CORS)
+app.middleware("http")(rate_limit_middleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -135,15 +145,23 @@ async def health_check():
     
     **Returns:**
     - `status`: "ok" if healthy
-    - `models_loaded`: Number of trained models in memory
+    - `models_loaded`: Number of trained models in memory  
     - `active_model`: Currently active model name
     """
-    info = model_loader.get_model_info()
-    return HealthResponse(
-        status="ok",
-        models_loaded=info["total_models"],
-        active_model=info["active_model"]
-    )
+    try:
+        info = model_loader.get_model_info()
+        return HealthResponse(
+            status="ok",
+            models_loaded=info["total_models"],
+            active_model=info["active_model"]
+        )
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        # In production, don't expose internal error details
+        if PRODUCTION_MODE:
+            raise HTTPException(status_code=503, detail="Service unavailable")
+        else:
+            raise HTTPException(status_code=503, detail=f"Service unavailable: {str(e)}")
 
 
 @app.get("/api/models", response_model=ModelsListResponse)
@@ -378,7 +396,324 @@ async def process_frame(request: dict):
         )
 
 
-if DEBUG:
+@app.post("/api/signatures/save", response_model=SignatureSaveResponse)
+async def save_signature(request: SignatureSaveRequest):
+    """
+    Save a captured signature for later verification.
+    
+    Stores the signature data associated with a user and session for future
+    'same person' verification attempts.
+    
+    **Request Body:**
+    - `signature_data`: Signature as [x, y, timestamp] tuples (5-1000 points)
+    - `user_id`: Unique identifier for the user (1-100 chars)
+    - `session_id`: Session identifier (1-100 chars)
+    - `metadata`: Optional metadata dictionary
+    
+    **Returns:**
+    - `signature_id`: Unique identifier for the saved signature
+    - `saved_successfully`: Boolean success indicator
+    - `message`: Success or error message
+    - `user_signature_count`: Total signatures for this user
+    
+    **Example Request:**
+    ```json
+    {
+      "signature_data": [
+        [100.0, 200.0, 0.0],
+        [105.0, 195.0, 0.05],
+        [110.0, 190.0, 0.10]
+      ],
+      "user_id": "user_12345", 
+      "session_id": "session_67890",
+      "metadata": {
+        "device": "desktop",
+        "browser": "chrome"
+      }
+    }
+    ```
+    
+    **Errors:**
+    - 400: Invalid signature data or user/session ID
+    - 500: Storage error
+    """
+    logger.info(f"Received save signature request for user {request.user_id}")
+    logger.debug(f"  Signature points: {len(request.signature_data)}")
+    logger.debug(f"  Session: {request.session_id}")
+    
+    try:
+        # Additional security validation
+        validation_error = validate_request_data({
+            "user_id": request.user_id,
+            "session_id": request.session_id,
+            "signature_data": request.signature_data,
+            "metadata": request.metadata
+        }, "save")
+        
+        if validation_error:
+            logger.warning(f"Security validation failed: {validation_error}")
+            raise ValueError(validation_error)
+        
+        # Validate signature data (basic validation)
+        if len(request.signature_data) < 5:
+            raise ValueError("Signature must have at least 5 points")
+        
+        if len(request.signature_data) > 1000:
+            raise ValueError("Signature cannot exceed 1000 points")
+        
+        # Validate point format
+        for i, point in enumerate(request.signature_data):
+            if len(point) != 3:
+                raise ValueError(f"Point {i} must have exactly 3 values [x, y, timestamp]")
+            
+            x, y, timestamp = point
+            if not all(isinstance(val, (int, float)) for val in [x, y, timestamp]):
+                raise ValueError(f"Point {i} contains non-numeric values")
+        
+        # Sanitize metadata strings
+        sanitized_metadata = {}
+        if request.metadata:
+            for key, value in request.metadata.items():
+                if isinstance(value, str):
+                    sanitized_metadata[key] = input_validator.sanitize_string(value)
+                else:
+                    sanitized_metadata[key] = value
+        
+        # Save to storage
+        storage = get_signature_storage()
+        signature_id, success = storage.save_signature(
+            user_id=request.user_id,
+            session_id=request.session_id,
+            signature_data=[[float(x), float(y), float(t)] for x, y, t in request.signature_data],
+            metadata=sanitized_metadata
+        )
+        
+        if success:
+            user_count = storage.get_user_signature_count(request.user_id)
+            logger.info(f"✓ Signature saved: {signature_id} (user now has {user_count} signatures)")
+            
+            return SignatureSaveResponse(
+                signature_id=signature_id,
+                saved_successfully=True,
+                message="Signature saved successfully",
+                user_signature_count=user_count
+            )
+        else:
+            logger.error("Failed to save signature to storage")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to save signature to storage"
+            )
+    
+    except ValueError as e:
+        logger.warning(f"Signature save validation error: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Signature save error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to save signature: {str(e)}"
+        )
+
+
+@app.get("/api/users/{user_id}/signatures", response_model=UserSignaturesListResponse)
+async def get_user_signatures(user_id: str):
+    """
+    Get all saved signatures for a user.
+    
+    Returns metadata about all signatures saved for the specified user,
+    including signature IDs, save timestamps, and point counts.
+    
+    **Parameters:**
+    - `user_id`: User identifier
+    
+    **Returns:**
+    - `user_id`: The user identifier
+    - `signatures`: List of signature metadata
+    - `total_count`: Total number of signatures
+    
+    **Example Response:**
+    ```json
+    {
+      "user_id": "user_12345",
+      "total_count": 2,
+      "signatures": [
+        {
+          "signature_id": "sig_abc123",
+          "saved_at": "2024-01-15T10:30:00Z",
+          "point_count": 45,
+          "session_id": "session_67890"
+        }
+      ]
+    }
+    ```
+    """
+    logger.info(f"Fetching signatures for user: {user_id}")
+    
+    try:
+        # Validate user_id parameter
+        validation_error = validate_request_data({"user_id": user_id}, "user_id")
+        if validation_error:
+            logger.warning(f"Security validation failed for user_id: {validation_error}")
+            raise ValueError(validation_error)
+        
+        storage = get_signature_storage()
+        signatures = storage.get_user_signatures(user_id)
+        
+        signature_list = [sig.to_dict() for sig in signatures]
+        
+        logger.info(f"✓ Found {len(signatures)} signatures for user {user_id}")
+        
+        return UserSignaturesListResponse(
+            user_id=user_id,
+            signatures=signature_list,
+            total_count=len(signature_list)
+        )
+    
+    except Exception as e:
+        logger.error(f"Error fetching user signatures: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch signatures: {str(e)}"
+        )
+
+
+@app.post("/api/users/{user_id}/verify", response_model=VerifyAgainstUserResponse)
+async def verify_against_user(user_id: str, request: VerifyAgainstUserRequest):
+    """
+    Verify a signature against all saved signatures for a user.
+    
+    Compares the provided signature against all saved signatures for the
+    specified user and returns the best match result.
+    
+    **Parameters:**
+    - `user_id`: User to verify against
+    
+    **Request Body:**
+    - `signature_data`: Signature to verify as [x, y, timestamp] tuples
+    - `threshold_override`: Optional custom threshold (0.0-2.0)
+    
+    **Returns:**
+    - `is_same_person`: Whether signature matches any saved signature
+    - `best_match_confidence`: Confidence of best match (0-100%)
+    - `matched_signature_id`: ID of best matching signature if any
+    - `total_signatures_checked`: Number of signatures checked
+    - `verification_details`: Detailed results for debugging
+    
+    **Errors:**
+    - 400: Invalid signature data
+    - 404: User has no saved signatures
+    - 500: Verification error
+    """
+    logger.info(f"Verifying signature against user {user_id}")
+    logger.debug(f"  Signature points: {len(request.signature_data)}")
+    
+    try:
+        # Validate user_id and request data
+        validation_error = validate_request_data({"user_id": user_id}, "user_id")
+        if validation_error:
+            logger.warning(f"Security validation failed for user_id: {validation_error}")
+            raise ValueError(validation_error)
+            
+        validation_error = validate_request_data({"signature_data": request.signature_data}, "verify")
+        if validation_error:
+            logger.warning(f"Security validation failed for signature_data: {validation_error}")
+            raise ValueError(validation_error)
+        
+        # Get user's saved signatures
+        storage = get_signature_storage()
+        saved_signatures = storage.get_user_signatures(user_id)
+        
+        if not saved_signatures:
+            logger.warning(f"No saved signatures found for user {user_id}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No saved signatures found for user {user_id}"
+            )
+        
+        # Verify against each saved signature
+        best_match = None
+        highest_confidence = 0.0
+        best_signature_id = None
+        verification_results = []
+        
+        input_signature = [[float(x), float(y), float(t)] for x, y, t in request.signature_data]
+        
+        for saved_sig in saved_signatures:
+            try:
+                # Run verification
+                result = verify_signatures(
+                    signature1=input_signature,
+                    signature2=saved_sig.signature_data
+                )
+                
+                verification_results.append({
+                    "signature_id": saved_sig.signature_id,
+                    "confidence": result.confidence,
+                    "distance": result.distance,
+                    "match": result.match
+                })
+                
+                # Track best match
+                if result.confidence > highest_confidence:
+                    highest_confidence = result.confidence
+                    best_match = result
+                    best_signature_id = saved_sig.signature_id
+                
+                logger.debug(f"  vs {saved_sig.signature_id}: confidence={result.confidence:.1f}%, match={result.match}")
+                
+            except Exception as e:
+                logger.warning(f"Verification failed against {saved_sig.signature_id}: {str(e)}")
+                verification_results.append({
+                    "signature_id": saved_sig.signature_id,
+                    "error": str(e)
+                })
+        
+        # Apply custom threshold if provided
+        is_same_person = False
+        if best_match:
+            if request.threshold_override is not None:
+                # Use custom threshold
+                is_same_person = best_match.distance < request.threshold_override
+            else:
+                # Use model's threshold decision
+                is_same_person = best_match.match
+        
+        logger.info(f"✓ Verification complete: is_same_person={is_same_person}, "
+                   f"best_confidence={highest_confidence:.1f}%")
+        
+        return VerifyAgainstUserResponse(
+            is_same_person=is_same_person,
+            best_match_confidence=highest_confidence,
+            matched_signature_id=best_signature_id,
+            total_signatures_checked=len(saved_signatures),
+            verification_details={
+                "all_results": verification_results,
+                "threshold_used": request.threshold_override or (best_match.threshold if best_match else None),
+                "best_distance": best_match.distance if best_match else None
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.warning(f"Verification validation error: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Verification error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Verification failed: {str(e)}"
+        )
+
+
+if DEBUG and not PRODUCTION_MODE:
     
     @app.get("/debug/models-detailed")
     async def debug_models():

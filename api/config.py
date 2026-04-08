@@ -58,7 +58,13 @@ API_HOST = "0.0.0.0"
 API_PORT = 8000
 
 # Debug mode (set to False in production)
-DEBUG = False
+DEBUG = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
+
+# Production mode - disables debug endpoints and increases security
+PRODUCTION_MODE = os.getenv("PRODUCTION_MODE", "false").lower() in ("true", "1", "yes")
+
+# Environment mode
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")  # development, staging, production
 
 CORS_ORIGINS = [
     "http://localhost:3000",      # React development server (default)
