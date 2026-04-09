@@ -89,11 +89,20 @@ Thumbs.db
 # ============================================================================
 # Project Specific - Training Outputs
 # ============================================================================
-training_outputs/models/
-training_outputs/processors/
-training_outputs/thresholds/
-*.pkl
-*.pth
+# KEEP these (needed for API runtime):
+# - training_outputs/models/ (trained .pth files)
+# - training_outputs/processors/ (preprocessor .pkl files)
+# - training_outputs/thresholds/ (threshold .pkl files)
+
+# EXCLUDE these (regeneratable):
+training_outputs/test_results/
+training_outputs/train_results/
+
+# ============================================================================
+# Environment & Secrets
+# ============================================================================
+.env
+.env.local
 
 # ============================================================================
 # Logs
