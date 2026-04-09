@@ -2,6 +2,35 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import './SignatureCanvas.css'
 import { apiClient, saveSignature, verifyAgainstUser, generateSessionId } from '../utils/api'
 
+// ============================================================================
+// EXPONENTIAL SMOOTHING - For stabilizing shaky hand tracking
+// ============================================================================
+class ExponentialSmoothing {
+  constructor(alpha = 0.2) {
+    this.alpha = alpha              // Smoothing factor (0 < alpha <= 1)
+    this.smoothedValue = null       // Current smoothed value
+    this.initialized = false
+  }
+
+  update(measurement) {
+    if (!this.initialized) {
+      // First measurement - initialize directly
+      this.smoothedValue = measurement
+      this.initialized = true
+      return measurement
+    }
+
+    // Exponential moving average: S_t = α * X_t + (1 - α) * S_{t-1}
+    this.smoothedValue = this.alpha * measurement + (1 - this.alpha) * this.smoothedValue
+    return this.smoothedValue
+  }
+
+  reset() {
+    this.smoothedValue = null
+    this.initialized = false
+  }
+}
+
 function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoading, userId = 'user_default' }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
@@ -28,6 +57,10 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   
   // Track user's total signature count from backend
   const userSignatureCountRef = useRef(0)
+
+  // Exponential smoothing for stabilizing hand tracking (reduce camera jitter)
+  const smoothingXRef = useRef(new ExponentialSmoothing(0.2))
+  const smoothingYRef = useRef(new ExponentialSmoothing(0.2))
 
   // Refs for data accessed in animation loop (not state!)
   const currentStrokeRef = useRef([])
@@ -133,6 +166,9 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
     isCapturingRef.current = true
     setIsCapturing(true)
     startTimeRef.current = Date.now()
+    // Reset exponential smoothing at start of new capture
+    smoothingXRef.current.reset()
+    smoothingYRef.current.reset()
     setStatus('Put fingers together, position 50cm away, then spread apart while signing')
   }
 
@@ -142,6 +178,9 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
     savedStrokesRef.current = []
     isCapturingRef.current = false
     setIsCapturing(false)
+    // Reset exponential smoothing when clearing canvas
+    smoothingXRef.current.reset()
+    smoothingYRef.current.reset()
     setStatus('Canvas cleared')
     setTimeout(() => setStatus('Camera ready'), 1500)
   }
@@ -190,7 +229,56 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
       return
     }
 
-    // Save signature to backend
+    // Check if we need to verify first
+    const hasExistingSignatures = userSignatureCountRef.current >= 1
+    
+    if (hasExistingSignatures) {
+      // VERIFY FIRST before saving (to avoid comparing against itself)
+      console.log('[FLOW] Has', userSignatureCountRef.current, 'existing signatures. Verifying BEFORE saving...')
+      setSaveStatus('verifying')
+      setSaveMessage('Verifying signature against previous signatures...')
+      setStatus('Verifying signature against previous signatures...')
+      
+      try {
+        // Verify the NEW signature against existing saved signatures (before saving it)
+        const verifyResponse = await verifyAgainstUser(userId, signatureData)
+        console.log('[FLOW] Verification completed:', verifyResponse)
+        
+        setVerificationResult(verifyResponse)
+        setSaveStatus('verification_result')
+        
+        if (verifyResponse.is_same_person) {
+          console.log('[FLOW] ✅ Same person detected! Saving signature now...')
+          setStatus(`✅ Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        } else {
+          console.log('[FLOW] ❌ Different person detected! Saving signature anyway...')
+          setStatus(`❌ Different person detected! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        }
+        
+        // Now save the signature AFTER verification
+        await saveSignatureAfterVerification(signatureData)
+        
+      } catch (error) {
+        console.error('[FLOW] Verification failed:', error)
+        setSaveStatus('error')
+        setSaveMessage(`❌ Verification failed: ${error.message}`)
+        setStatus('Verification failed. Try again.')
+        
+        setTimeout(() => {
+          setSaveStatus(null)
+          setSaveMessage('')
+          setStatus('Ready - Press "Start Capture" or Z key')
+        }, 5000)
+      }
+    } else {
+      // No existing signatures - just save the first one
+      console.log('[FLOW] First signature. Saving directly without verification...')
+      await saveSignatureAfterVerification(signatureData)
+    }
+  }
+
+  // Helper function to save signature after verification is done
+  const saveSignatureAfterVerification = async (signatureData) => {
     setSaveStatus('saving')
     setSaveMessage('Saving signature...')
     setStatus('Saving signature to secure storage...')
@@ -215,7 +303,7 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
       )
 
       if (saveResponse.saved_successfully) {
-        const totalUserSignatures = saveResponse.user_signature_count // Use backend count
+        const totalUserSignatures = saveResponse.user_signature_count
         
         // Update state
         const newCollected = [...collectedSignatures, signatureData]
@@ -248,18 +336,15 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
           }, 3000)
           
         } else if (totalUserSignatures >= 2) {
-          // Multiple signatures - offer verification
-          console.log('[SAVE] '+totalUserSignatures+' signatures detected. Proceeding with verification.')
-          setStatus('Multiple signatures saved. Ready for same-person verification!')
+          // Multiple signatures now saved
+          console.log('[SAVE] '+totalUserSignatures+' signatures saved.')
+          setStatus('Ready for more signatures. Press "Start Capture" or Z key')
           
-          console.log('[DEBUG] Scheduling verification in 2 seconds...')
-          // Automatically verify against user's saved signatures after 2 seconds
-          setTimeout(async () => {
-            console.log('[DEBUG] Verification timeout fired! Calling performUserVerification')
-            console.log('[DEBUG] User signature count:', userSignatureCountRef.current)
-            console.log('[DEBUG] User ID:', userId)
-            await performUserVerification(signatureData)
-          }, 2000)
+          // Clear save message after 3 seconds
+          setTimeout(() => {
+            setSaveStatus(null)
+            setSaveMessage('')
+          }, 3000)
         }
       } else {
         throw new Error('Save response indicates failure')
@@ -417,9 +502,13 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
         }
 
         if (handData.detected && handData.index_finger) {
-          const indexX = handData.index_finger[0]
-          const indexY = handData.index_finger[1]
+          const rawIndexX = handData.index_finger[0]
+          const rawIndexY = handData.index_finger[1]
           const dist = handData.finger_distance
+
+          // Apply exponential smoothing to smooth out camera jitter
+          const indexX = smoothingXRef.current.update(rawIndexX)
+          const indexY = smoothingYRef.current.update(rawIndexY)
 
           setIsTracking(true)
           setFingerDistance(Math.round(dist))
@@ -469,6 +558,9 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
             // Fingers together or outside area - end current stroke
             savedStrokesRef.current.push([...currentStrokeRef.current])
             currentStrokeRef.current = []
+            // Reset exponential smoothing when stroke ends (ready for next stroke)
+            smoothingXRef.current.reset()
+            smoothingYRef.current.reset()
           }
         } else {
           setIsTracking(false)
@@ -483,6 +575,9 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
             savedStrokesRef.current.push([...currentStrokeRef.current])
             currentStrokeRef.current = []
           }
+          // Reset exponential smoothing when hand is lost
+          smoothingXRef.current.reset()
+          smoothingYRef.current.reset()
         }
       } catch (err) {
         console.error('Hand detection error:', err)
@@ -553,10 +648,12 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
           </div>
         </div>
 
-        {/* Camera Area with Cleaner Layout */}
-        <div className="camera-section">
-          {/* Status Bar Above Camera */}
-          <div className="camera-status-bar">
+        {/* Camera and Signature Output Side-by-Side */}
+        <div className="content-wrapper">
+          {/* Left: Camera Area with Cleaner Layout */}
+          <div className="camera-section">
+            {/* Status Bar Above Camera */}
+            <div className="camera-status-bar">
             <div className="status-left">
               {isTracking ? (
                 <div className="tracking-indicator">
@@ -657,6 +754,51 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
               <span className="info-value">{isCapturing ? 'Recording' : 'Ready'}</span>
             </div>
           </div>
+        </div>
+
+        {/* Right: Signature Display Section - Shows recorded signature in black ink on white background */}
+        <div className="signature-display-section">
+          <h3 className="signature-display-title">Signature Output</h3>
+          <div className="signature-display-canvas">
+            <svg 
+              width="400" 
+              height="480" 
+              viewBox="0 0 400 480"
+              style={{
+                background: 'white',
+                border: '2px solid #e0e0e0',
+                borderRadius: '8px'
+              }}
+            >
+              {/* Draw all saved strokes in black */}
+              {savedStrokesRef.current.map((stroke, strokeIndex) => 
+                stroke.length > 1 && (
+                  <polyline
+                    key={`saved-${strokeIndex}`}
+                    points={stroke.map(p => `${p[0]},${p[1]}`).join(' ')}
+                    fill="none"
+                    stroke="#000000"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )
+              )}
+
+              {/* Draw current stroke being drawn in black */}
+              {currentStrokeRef.current.length > 1 && (
+                <polyline
+                  points={currentStrokeRef.current.map(p => `${p[0]},${p[1]}`).join(' ')}
+                  fill="none"
+                  stroke="#000000"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </svg>
+          </div>
+        </div>
         </div>
 
         {/* Controls Section */}

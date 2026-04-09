@@ -13,7 +13,7 @@ OUTPUT_DIRECTORY = os.path.join(parent_dir, "training_outputs")
 
 # Model parameters
 MODEL_CONFIG = {
-    'input_size': 3,
+    'input_size': 5,  # UPDATED: Now includes velocity features (x, y, dt, vx, vy)
     'hidden_size': 128,
     'dropout_rate': 0.3,
     'num_layers': 2,

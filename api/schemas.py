@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from enum import Enum
 
 
@@ -326,7 +326,7 @@ class VerifyAgainstUserResponse(BaseModel):
         le=100,
         description="Confidence of best match (0-100%)"
     )
-    matched_signature_id: str = Field(
+    matched_signature_id: Optional[str] = Field(
         default=None,
         description="ID of best matching signature if any"
     )

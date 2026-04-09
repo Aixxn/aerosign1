@@ -40,6 +40,9 @@ class SignatureProcessor:
                 # Combine coordinates with time differences
                 signature = np.column_stack((xy_coords, dt))
                 
+                # Add velocity features (computed from coordinates and time)
+                signature = self._add_velocity_features(signature)
+                
                 # Check for NaN and inf values
                 if np.any(np.isnan(signature)) or np.any(np.isinf(signature)):
                     print(f"Warning: Invalid values found in {file_path}")
@@ -58,6 +61,43 @@ class SignatureProcessor:
         except Exception as e:
             print(f"Error while reading file {file_path}: {e}")
             return None
+    
+    def _add_velocity_features(self, signature):
+        """
+        Add velocity features to signature.
+        
+        Input: signature with shape (n_points, 3) containing [x, y, dt]
+        Output: signature with shape (n_points, 5) containing [x, y, dt, vx, vy]
+        
+        Velocity is computed as the change in position divided by time:
+        vx = dx / dt
+        vy = dy / dt
+        
+        Args:
+            signature: Array of shape (n_points, 3) with [x, y, dt]
+        
+        Returns:
+            Array of shape (n_points, 5) with [x, y, dt, vx, vy]
+        """
+        x, y, dt = signature[:, 0], signature[:, 1], signature[:, 2]
+        
+        # Compute position differences
+        dx = np.diff(x, prepend=x[0])
+        dy = np.diff(y, prepend=y[0])
+        
+        # Compute velocities (avoid division by zero on first point)
+        vx = np.zeros_like(x)
+        vy = np.zeros_like(y)
+        
+        # Skip first point (dt is 0, so velocity is undefined)
+        valid_indices = dt > 0.001  # Only where dt > 1ms
+        vx[valid_indices] = dx[valid_indices] / dt[valid_indices]
+        vy[valid_indices] = dy[valid_indices] / dt[valid_indices]
+        
+        # Combine into new signature format
+        enhanced_signature = np.column_stack((x, y, dt, vx, vy))
+        
+        return enhanced_signature
     
     def load_signatures_from_person_folders(self, data_directory):
         if not os.path.exists(data_directory):

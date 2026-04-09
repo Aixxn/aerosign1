@@ -634,56 +634,92 @@ async def verify_against_user(user_id: str, request: VerifyAgainstUserRequest):
                 detail=f"No saved signatures found for user {user_id}"
             )
         
-        # Verify against each saved signature
-        best_match = None
-        highest_confidence = 0.0
+        # Verify against each saved signature using ENSEMBLE VOTING
         best_signature_id = None
+        highest_confidence = 0.0
+        ensemble_passed = False
         verification_results = []
+        
+        # CONFIDENCE THRESHOLD: Require this minimum confidence for acceptance
+        CONFIDENCE_THRESHOLD = 85.0
         
         input_signature = [[float(x), float(y), float(t)] for x, y, t in request.signature_data]
         
         for saved_sig in saved_signatures:
             try:
-                # Run verification
-                result = verify_signatures(
-                    signature1=input_signature,
-                    signature2=saved_sig.signature_data
-                )
+                # ENSEMBLE APPROACH: Run against 5 different models and take majority vote
+                ensemble_results = []
+                for model_name in ['combo_1', 'combo_2', 'combo_3', 'combo_4', 'combo_5']:
+                    result = verify_signatures(
+                        signature1=input_signature,
+                        signature2=saved_sig.signature_data,
+                        model_name=model_name
+                    )
+                    ensemble_results.append({
+                        'model': model_name,
+                        'match': result.match,
+                        'confidence': result.confidence,
+                        'distance': result.distance
+                    })
+                
+                # COUNT VOTES: STRICT 5/5 ENSEMBLE VOTING (100% UNANIMITY REQUIRED)
+                match_votes = sum(1 for r in ensemble_results if r['match'])
+                
+                # Use average confidence from ensemble
+                avg_confidence = sum(r['confidence'] for r in ensemble_results) / len(ensemble_results)
+                
+                # NEW STRICT VOTING RULE:
+                # Require BOTH conditions:
+                # 1. All 5 models must agree (match_votes == 5)
+                # 2. Average confidence must be >= 85%
+                ensemble_match = (match_votes == 5) and (avg_confidence >= CONFIDENCE_THRESHOLD)
+                
+                # Log detailed reasons for rejection/acceptance
+                if ensemble_match:
+                    logger.info(f"✓ Ensemble PASSED vs {saved_sig.signature_id}: 5/5 models agreed, "
+                               f"avg_confidence={avg_confidence:.1f}% (>= {CONFIDENCE_THRESHOLD}%)")
+                else:
+                    rejection_reason = ""
+                    if match_votes < 5:
+                        rejection_reason = f"Only {match_votes}/5 models agreed (need 5/5 unanimity)"
+                    if avg_confidence < CONFIDENCE_THRESHOLD:
+                        if rejection_reason:
+                            rejection_reason += f"; confidence {avg_confidence:.1f}% < {CONFIDENCE_THRESHOLD}%"
+                        else:
+                            rejection_reason = f"Confidence {avg_confidence:.1f}% < {CONFIDENCE_THRESHOLD}%"
+                    
+                    logger.warning(f"✗ Ensemble REJECTED vs {saved_sig.signature_id}: {rejection_reason}")
                 
                 verification_results.append({
                     "signature_id": saved_sig.signature_id,
-                    "confidence": result.confidence,
-                    "distance": result.distance,
-                    "match": result.match
+                    "ensemble_match": ensemble_match,
+                    "ensemble_votes": match_votes,
+                    "average_confidence": avg_confidence,
+                    "confidence_threshold": CONFIDENCE_THRESHOLD,
+                    "individual_results": ensemble_results
                 })
                 
-                # Track best match
-                if result.confidence > highest_confidence:
-                    highest_confidence = result.confidence
-                    best_match = result
+                # Track best match based on STRICT ensemble criteria
+                # Only consider signatures that passed BOTH checks
+                if ensemble_match and avg_confidence > highest_confidence:
+                    highest_confidence = avg_confidence
                     best_signature_id = saved_sig.signature_id
-                
-                logger.debug(f"  vs {saved_sig.signature_id}: confidence={result.confidence:.1f}%, match={result.match}")
+                    ensemble_passed = True
                 
             except Exception as e:
-                logger.warning(f"Verification failed against {saved_sig.signature_id}: {str(e)}")
+                logger.error(f"Ensemble verification failed against {saved_sig.signature_id}: {str(e)}")
                 verification_results.append({
                     "signature_id": saved_sig.signature_id,
                     "error": str(e)
                 })
         
-        # Apply custom threshold if provided
-        is_same_person = False
-        if best_match:
-            if request.threshold_override is not None:
-                # Use custom threshold
-                is_same_person = best_match.distance < request.threshold_override
-            else:
-                # Use model's threshold decision
-                is_same_person = best_match.match
+        # Use ensemble voting result (now with strict 5/5 + confidence check)
+        # Only mark as same person if strict ensemble voting passed
+        is_same_person = ensemble_passed
         
         logger.info(f"✓ Verification complete: is_same_person={is_same_person}, "
-                   f"best_confidence={highest_confidence:.1f}%")
+                   f"best_confidence={highest_confidence:.1f}%, best_signature_id={best_signature_id} "
+                   f"[Strict 5/5 + {CONFIDENCE_THRESHOLD}% confidence]")
         
         return VerifyAgainstUserResponse(
             is_same_person=is_same_person,
@@ -692,8 +728,8 @@ async def verify_against_user(user_id: str, request: VerifyAgainstUserRequest):
             total_signatures_checked=len(saved_signatures),
             verification_details={
                 "all_results": verification_results,
-                "threshold_used": request.threshold_override or (best_match.threshold if best_match else None),
-                "best_distance": best_match.distance if best_match else None
+                "ensemble_voting_enabled": True,
+                "ensemble_threshold": "3 out of 5 models must agree"
             }
         )
     

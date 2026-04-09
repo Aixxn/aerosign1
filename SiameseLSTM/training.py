@@ -203,8 +203,8 @@ def train_siamese_lstm(data_directory, save_model=True):
 
             train_losses, val_losses = train_model(model, train_loader, test_loader)
 
-            # Plot training distance distribution and calculate threshold
-            threshold = plot_training_distance_distribution(model, train_loader, combination_idx)
+            # Plot training distance distribution and calculate ROC-optimized threshold
+            threshold = plot_training_distance_distribution(model, train_loader, combination_idx, use_roc_optimization=True)
 
             accuracy, distances, y_test_eval, predictions, precision, recall, f1 = evaluate_model(model, test_loader, threshold)
             plot_results(train_losses, val_losses, y_test_eval, distances, predictions, test_person_names, threshold)

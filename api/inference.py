@@ -111,15 +111,16 @@ def preprocess_signature(
     
     Steps:
     1. Convert to numpy array
-    2. Normalize coordinates using saved scaler (StandardScaler)
-    3. Interpolate to uniform target length
+    2. Add velocity features (vx, vy) from position deltas
+    3. Normalize coordinates using saved scaler (StandardScaler)
+    4. Interpolate to uniform target length
     
     Args:
         signature_points: Raw [x, y, timestamp] points
         processor: Dictionary with 'scaler' and 'target_length' from training
     
     Returns:
-        np.ndarray: Preprocessed signature ready for model
+        np.ndarray: Preprocessed signature ready for model (5D with velocity)
     
     Raises:
         RuntimeError: If preprocessing fails
@@ -131,16 +132,62 @@ def preprocess_signature(
         # Convert to numpy array
         sig_array = np.array(signature_points, dtype=np.float32)
         
-        # Step 1: Normalize using scaler
-        sig_normalized = scaler.transform(sig_array)
+        # Step 1: Add velocity features (vx, vy)
+        sig_with_velocity = _add_velocity_features(sig_array)
         
-        # Step 2: Interpolate to uniform length
+        # Step 2: Normalize using scaler
+        sig_normalized = scaler.transform(sig_with_velocity)
+        
+        # Step 3: Interpolate to uniform length
         sig_processed = _interpolate_signature(sig_normalized, target_length)
         
         return sig_processed
     
     except Exception as e:
         raise RuntimeError(f"Preprocessing failed: {str(e)}")
+
+
+def _add_velocity_features(signature: np.ndarray) -> np.ndarray:
+    """
+    Add velocity features (vx, vy) to signature points.
+    
+    Args:
+        signature: Signature array of shape (N, 3) with [x, y, timestamp]
+    
+    Returns:
+        np.ndarray: Extended signature of shape (N, 5) with [x, y, timestamp, vx, vy]
+    """
+    N = len(signature)
+    sig_with_velocity = np.zeros((N, 5), dtype=np.float32)
+    
+    # Copy original coordinates
+    sig_with_velocity[:, :3] = signature[:, :3]
+    
+    # Compute velocity features
+    for i in range(N):
+        if i == 0:
+            # First point: velocity is zero
+            sig_with_velocity[i, 3] = 0.0  # vx
+            sig_with_velocity[i, 4] = 0.0  # vy
+        else:
+            # Compute velocity: delta_position / delta_time
+            x_prev, y_prev, t_prev = signature[i-1, :]
+            x_curr, y_curr, t_curr = signature[i, :]
+            
+            delta_t = t_curr - t_prev
+            
+            # Avoid division by zero (if timestamps are exactly equal)
+            if delta_t > 0:
+                vx = (x_curr - x_prev) / delta_t
+                vy = (y_curr - y_prev) / delta_t
+            else:
+                vx = 0.0
+                vy = 0.0
+            
+            sig_with_velocity[i, 3] = vx
+            sig_with_velocity[i, 4] = vy
+    
+    return sig_with_velocity
 
 
 def _interpolate_signature(signature: np.ndarray, target_length: int) -> np.ndarray:
@@ -305,6 +352,22 @@ def verify_signatures(
         sig1_processed = preprocess_signature(signature1, processor)
         sig2_processed = preprocess_signature(signature2, processor)
         logger.info(f"✓ Preprocessing complete (shape: {sig1_processed.shape})")
+        
+        # DEBUG: Show raw signature statistics
+        sig1_raw = np.array(signature1, dtype=np.float32)
+        sig2_raw = np.array(signature2, dtype=np.float32)
+        
+        logger.warning(f"[DEBUG-RAW] SIG1: {len(sig1_raw)} pts, X [{sig1_raw[:,0].min():.2f}, {sig1_raw[:,0].max():.2f}], Y [{sig1_raw[:,1].min():.2f}, {sig1_raw[:,1].max():.2f}]")
+        logger.warning(f"[DEBUG-RAW] SIG2: {len(sig2_raw)} pts, X [{sig2_raw[:,0].min():.2f}, {sig2_raw[:,0].max():.2f}], Y [{sig2_raw[:,1].min():.2f}, {sig2_raw[:,1].max():.2f}]")
+        
+        # Show processed signature statistics
+        logger.warning(f"[DEBUG-PROC] SIG1: shape {sig1_processed.shape}, range [{sig1_processed.min():.6f}, {sig1_processed.max():.6f}]")
+        logger.warning(f"[DEBUG-PROC] SIG2: shape {sig2_processed.shape}, range [{sig2_processed.min():.6f}, {sig2_processed.max():.6f}]")
+        
+        # Calculate difference
+        diff = np.mean(np.abs(sig1_processed - sig2_processed))
+        logger.warning(f"[DEBUG-DIFF] Mean absolute difference after processing: {diff:.8f}")
+        
     except RuntimeError as e:
         logger.error(f"Preprocessing failed: {str(e)}")
         raise
@@ -327,9 +390,11 @@ def verify_signatures(
         logger.error(f"Inference failed: {str(e)}")
         raise
     
+    logger.warning(f"[DEBUG-DISTANCE] Raw model output: {distance:.8f}")
     logger.debug(f"Comparing distance {distance:.4f} to threshold {threshold:.4f}")
     match = distance < threshold
     logger.info(f"✓ Decision: {'MATCH' if match else 'NO MATCH'}")
+    logger.warning(f"[DEBUG-DECISION] Distance {distance:.8f} < Threshold {threshold:.4f} = {match}")
     
     confidence = calculate_confidence(distance, threshold)
     logger.info(f"✓ Confidence: {confidence}%")

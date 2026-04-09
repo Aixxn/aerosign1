@@ -21,7 +21,7 @@ THRESHOLDS_DIR = TRAINING_OUTPUTS / "thresholds"
 # ============================================================================
 
 # Number of trained model combinations (leave-two-out validation)
-MODEL_COMBINATIONS = 6
+MODEL_COMBINATIONS = 10  # Set to 10 for all combinations, or adjust as needed
 
 # Model file paths - dynamically generated for all combinations
 MODEL_FILES = {
@@ -41,7 +41,7 @@ DEFAULT_MODEL = "combo_1"
 # ============================================================================
 
 MODEL_ARCHITECTURE = {
-    "input_size": 3,              # X, Y, time coordinates
+    "input_size": 5,              # X, Y, time, vx, vy (velocity features)
     "hidden_size": 128,           # LSTM hidden units
     "num_layers": 2,              # LSTM layers (bidirectional)
     "dropout_rate": 0.3,          # LSTM dropout rate
