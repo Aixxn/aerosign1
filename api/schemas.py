@@ -306,12 +306,6 @@ class VerifyAgainstUserRequest(BaseModel):
         min_items=5,
         max_items=1000
     )
-    user_id: str = Field(
-        ...,
-        description="User to verify against",
-        min_length=1,
-        max_length=100
-    )
     threshold_override: float = Field(
         default=None,
         description="Override default threshold for matching",

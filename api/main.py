@@ -43,7 +43,7 @@ app = FastAPI(
 )
 
 # Security middleware (must be added before CORS)
-app.middleware("http")(rate_limit_middleware)
+# app.middleware("http")(rate_limit_middleware)  # Disabled for PoC testing
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,5 +1,5 @@
-from config import DATA_DIRECTORY
-from training import train_siamese_lstm
+from .config import DATA_DIRECTORY
+from .training import train_siamese_lstm
 
 if __name__ == "__main__":
     try:

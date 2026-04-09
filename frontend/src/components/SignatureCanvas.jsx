@@ -25,6 +25,9 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   const [sessionId] = useState(generateSessionId())
   const [savedSignatureIds, setSavedSignatureIds] = useState([])
   const [verificationResult, setVerificationResult] = useState(null)
+  
+  // Track user's total signature count from backend
+  const userSignatureCountRef = useRef(0)
 
   // Refs for data accessed in animation loop (not state!)
   const currentStrokeRef = useRef([])
@@ -192,6 +195,11 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
     setSaveMessage('Saving signature...')
     setStatus('Saving signature to secure storage...')
     
+    console.log('[SAVE] Starting save...')
+    console.log('[SAVE] Signature points:', signatureData.length)
+    console.log('[SAVE] User ID:', userId)
+    console.log('[SAVE] Session ID:', sessionId)
+    
     try {
       const saveResponse = await saveSignature(
         userId,
@@ -207,17 +215,25 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
       )
 
       if (saveResponse.saved_successfully) {
+        const totalUserSignatures = saveResponse.user_signature_count // Use backend count
+        
         // Update state
         const newCollected = [...collectedSignatures, signatureData]
         setCollectedSignatures(newCollected)
         setSavedSignatureIds([...savedSignatureIds, saveResponse.signature_id])
+        userSignatureCountRef.current = totalUserSignatures
+        
+        console.log('[SAVE] Signature saved successfully!')
+        console.log('[SAVE] API says user has total:', totalUserSignatures, 'signatures')
+        console.log('[SAVE] Signature ID:', saveResponse.signature_id)
         
         setSaveStatus('saved')
         setSaveMessage(`✅ Signature ${signatureNumber} saved successfully!`)
         setStatus(`Signature ${signatureNumber} saved! (ID: ${saveResponse.signature_id.substr(0, 8)}...)`)
 
-        if (newCollected.length === 1) {
+        if (totalUserSignatures === 1) {
           // First signature saved - prepare for second
+          console.log('[SAVE] First signature detected')
           setSignatureNumber(2)
           currentStrokeRef.current = []
           savedStrokesRef.current = []
@@ -231,12 +247,17 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
             setStatus('Ready for second signature - Press "Start Capture" or Z key')
           }, 3000)
           
-        } else if (newCollected.length >= 2) {
+        } else if (totalUserSignatures >= 2) {
           // Multiple signatures - offer verification
+          console.log('[SAVE] '+totalUserSignatures+' signatures detected. Proceeding with verification.')
           setStatus('Multiple signatures saved. Ready for same-person verification!')
           
+          console.log('[DEBUG] Scheduling verification in 2 seconds...')
           // Automatically verify against user's saved signatures after 2 seconds
           setTimeout(async () => {
+            console.log('[DEBUG] Verification timeout fired! Calling performUserVerification')
+            console.log('[DEBUG] User signature count:', userSignatureCountRef.current)
+            console.log('[DEBUG] User ID:', userId)
             await performUserVerification(signatureData)
           }, 2000)
         }
@@ -262,31 +283,52 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
   // New function to verify against user's saved signatures
   const performUserVerification = async (currentSignatureData) => {
     try {
+      console.log('[DEBUG] Starting verification...')
+      console.log('[DEBUG] userId:', userId)
+      console.log('[DEBUG] signatureData points:', currentSignatureData.length)
+      
       setStatus('Verifying if signature matches previous signatures...')
       
       const verifyResponse = await verifyAgainstUser(userId, currentSignatureData)
+      console.log('[DEBUG] Verification response received:', verifyResponse)
+      
       setVerificationResult(verifyResponse)
+      setSaveStatus('verification_result') // Mark as verification result
       
       if (verifyResponse.is_same_person) {
-        setStatus(`✅ Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
-        setSaveMessage(`🎯 Same person confirmed (${verifyResponse.total_signatures_checked} signatures checked)`)
+        console.log('[DEBUG] Match found! Showing success message')
+        setStatus(`Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        setSaveMessage(`Same person confirmed (${verifyResponse.total_signatures_checked} signatures checked)`)
       } else {
-        setStatus(`⚠️ Different person detected. Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
-        setSaveMessage(`🚨 This appears to be a different person`)
+        console.log('[DEBUG] No match! Showing forgery alert')
+        setStatus(`FORGERY DETECTED - Different person! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        setSaveMessage(`This signature does NOT match the enrolled user`)
       }
       
-      // Clear verification message after 10 seconds
+      // Clear verification message after 15 seconds (more time to read)
       setTimeout(() => {
         setVerificationResult(null)
         setSaveStatus(null)
         setSaveMessage('')
         setStatus('Ready for next signature - Press "Start Capture" or Z key')
-      }, 10000)
+      }, 15000)
       
     } catch (error) {
-      console.error('Error verifying signature:', error)
-      setStatus('Verification failed. Signature was saved successfully.')
-      setSaveMessage(`⚠️ Verification error: ${error.message}`)
+      console.error('[ERROR] Verification failed:', error)
+      console.error('[ERROR] Error message:', error.message)
+      console.error('[ERROR] Error response:', error.response?.data)
+      
+      setStatus('⚠️ Verification error - Signature was saved successfully.')
+      setSaveMessage(`❌ Verification failed: ${error.message}`)
+      setSaveStatus('error')
+      
+      // Show error longer
+      setTimeout(() => {
+        setVerificationResult(null)
+        setSaveStatus(null)
+        setSaveMessage('')
+        setStatus('Ready for next signature - Press "Start Capture" or Z key')
+      }, 15000)
     }
   }
 

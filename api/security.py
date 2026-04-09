@@ -182,7 +182,11 @@ async def rate_limit_middleware(request: Request, call_next):
     client_ip = get_client_ip(request)
     
     # Different rate limits for different endpoints
-    if request.url.path.startswith("/api/signatures") or request.url.path.startswith("/api/users"):
+    if request.url.path.startswith("/api/process-frame"):
+        # High limits for real-time frame processing (30fps = 1800 req/min)
+        max_requests = 2000
+        window_seconds = 60
+    elif request.url.path.startswith("/api/signatures") or request.url.path.startswith("/api/users"):
         # Stricter limits for storage operations
         max_requests = 20
         window_seconds = 60
