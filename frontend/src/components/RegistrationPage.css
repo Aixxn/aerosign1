@@ -82,3 +82,11 @@
     border-radius: 0;
   }
 }
+
+/* Extra small screens (mobile) */
+@media (max-width: 375px) {
+  .reg-form-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

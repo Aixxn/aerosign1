@@ -161,7 +161,7 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 py-12 lg:py-24 bg-surface">
+    <main className="min-h-screen flex items-center justify-center px-4 sm:px-6 py-12 lg:py-24 bg-surface">
       <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-0 overflow-hidden shadow-none">
         {/* Left Side: Brand & Visual Anchor */}
         <div className="hidden md:flex flex-col justify-between p-12 bg-surface-container-low reg-viewport-clip">
@@ -208,8 +208,8 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
         </div>
 
         {/* Right Side: Registration Form */}
-        <div className="bg-surface p-8 md:p-16 flex flex-col justify-center">
-          <div className="max-w-sm mx-auto w-full">
+        <div className="bg-surface p-6 sm:p-8 md:p-16 flex flex-col justify-center">
+          <div className="max-w-sm mx-auto w-full min-w-0">
             <header className="mb-10">
               <h2 className="text-2xl font-headline font-bold text-on-surface tracking-tight mb-2">
                 Create Account
@@ -308,16 +308,16 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
                     onChange={handleInputChange}
                     disabled={loading}
                     aria-describedby={fieldErrors.password ? 'password-error' : 'password-hint'}
-                    className="w-full bg-transparent border-0 border-b border-outline-variant/40 px-0 py-2 focus:ring-0 focus:border-primary text-on-surface placeholder:text-surface-dim font-body transition-all disabled:opacity-60 disabled:cursor-not-allowed pr-8"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute right-0 bottom-2 text-outline-variant hover:text-primary cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <span className="material-symbols-outlined text-lg">
+                    className="w-full bg-transparent border-0 border-b border-outline-variant/40 px-0 py-2 pr-10 focus:ring-0 focus:border-primary text-on-surface placeholder:text-surface-dim font-body transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                   />
+                   <button
+                     type="button"
+                     onClick={() => setShowPassword(!showPassword)}
+                     disabled={loading}
+                     aria-label={showPassword ? 'Hide password' : 'Show password'}
+                     className="absolute right-0 bottom-1.5 p-1 -m-1 text-outline-variant hover:text-primary cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
+                   >
+                     <span className="material-symbols-outlined text-lg">
                       {showPassword ? 'visibility_off' : 'visibility'}
                     </span>
                   </button>
@@ -352,16 +352,16 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
                     onChange={handleInputChange}
                     disabled={loading}
                     aria-describedby={fieldErrors.passwordConfirm ? 'passwordConfirm-error' : undefined}
-                    className="w-full bg-transparent border-0 border-b border-outline-variant/40 px-0 py-2 focus:ring-0 focus:border-primary text-on-surface placeholder:text-surface-dim font-body transition-all disabled:opacity-60 disabled:cursor-not-allowed pr-8"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                    disabled={loading}
-                    aria-label={showPasswordConfirm ? 'Hide password' : 'Show password'}
-                    className="absolute right-0 bottom-2 text-outline-variant hover:text-primary cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <span className="material-symbols-outlined text-lg">
+                    className="w-full bg-transparent border-0 border-b border-outline-variant/40 px-0 py-2 pr-10 focus:ring-0 focus:border-primary text-on-surface placeholder:text-surface-dim font-body transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                   />
+                   <button
+                     type="button"
+                     onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                     disabled={loading}
+                     aria-label={showPasswordConfirm ? 'Hide password' : 'Show password'}
+                     className="absolute right-0 bottom-1.5 p-1 -m-1 text-outline-variant hover:text-primary cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
+                   >
+                     <span className="material-symbols-outlined text-lg">
                       {showPasswordConfirm ? 'visibility_off' : 'visibility'}
                     </span>
                   </button>
