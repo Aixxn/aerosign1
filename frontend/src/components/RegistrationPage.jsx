@@ -18,11 +18,13 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
     fullName: '',
     email: '',
     password: '',
+    passwordConfirm: '',
     termsAccepted: false
   })
 
   // UI state
   const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
@@ -59,6 +61,12 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
       errors.password = 'Password is required'
     } else if (!validatePassword(formData.password)) {
       errors.password = 'Password must be 8+ chars with uppercase, lowercase, and number'
+    }
+
+    if (!formData.passwordConfirm) {
+      errors.passwordConfirm = 'Please re-enter your password'
+    } else if (formData.password !== formData.passwordConfirm) {
+      errors.passwordConfirm = 'Passwords do not match'
     }
 
     if (!formData.termsAccepted) {
@@ -288,7 +296,7 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
                   className="block font-label text-[10px] font-bold uppercase tracking-wider text-outline mb-1 group-focus-within:text-primary transition-colors"
                   htmlFor="password"
                 >
-                  Security Key
+                  Password
                 </label>
                 <div className="relative">
                   <input
@@ -322,6 +330,45 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
                 {!fieldErrors.password && (
                   <p id="password-hint" className="text-on-surface-variant text-xs mt-1">
                     8+ chars, uppercase, lowercase, number
+                  </p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="relative group">
+                <label
+                  className="block font-label text-[10px] font-bold uppercase tracking-wider text-outline mb-1 group-focus-within:text-primary transition-colors"
+                  htmlFor="passwordConfirm"
+                >
+                  Re-enter Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="passwordConfirm"
+                    name="passwordConfirm"
+                    type={showPasswordConfirm ? 'text' : 'password'}
+                    placeholder="••••••••••••"
+                    value={formData.passwordConfirm}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                    aria-describedby={fieldErrors.passwordConfirm ? 'passwordConfirm-error' : undefined}
+                    className="w-full bg-transparent border-0 border-b border-outline-variant/40 px-0 py-2 focus:ring-0 focus:border-primary text-on-surface placeholder:text-surface-dim font-body transition-all disabled:opacity-60 disabled:cursor-not-allowed pr-8"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                    disabled={loading}
+                    aria-label={showPasswordConfirm ? 'Hide password' : 'Show password'}
+                    className="absolute right-0 bottom-2 text-outline-variant hover:text-primary cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      {showPasswordConfirm ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+                {fieldErrors.passwordConfirm && (
+                  <p id="passwordConfirm-error" className="text-error text-xs mt-1">
+                    {fieldErrors.passwordConfirm}
                   </p>
                 )}
               </div>
