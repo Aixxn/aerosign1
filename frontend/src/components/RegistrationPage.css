@@ -1,0 +1,84 @@
+/* Registration Page - Custom Styles */
+
+/* Viewport clip radius for left panel (0 top-right, 0.5rem other corners, 0 bottom-right, 0.5rem other corners) */
+.reg-viewport-clip {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0.5rem;
+}
+
+/* Preview container with aspect ratio and border styling */
+.reg-preview-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  background-color: var(--surface-container-lowest);
+  border: 1px solid rgba(192, 199, 209, 0.1);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Dot pattern background for preview */
+.reg-dot-pattern {
+  background-image: radial-gradient(
+    circle at 2px 2px,
+    #006398 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+  position: absolute;
+  inset: 0;
+}
+
+/* Focus management and accessibility */
+.reg-preview-container:focus-within {
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4),
+    0 0 0 2px rgba(100, 181, 246, 0.3) inset;
+}
+
+/* Ensure Material Symbols render properly */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure error text is visible */
+.text-error {
+  color: var(--error);
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 767px) {
+  .reg-preview-container {
+    aspect-ratio: auto;
+    min-height: 200px;
+  }
+
+  .reg-viewport-clip {
+    border-radius: 0;
+  }
+}
