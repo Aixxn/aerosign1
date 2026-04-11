@@ -1,6 +1,14 @@
-/* Registration Page - Custom Styles */
+/* ============================================================================
+   REGISTRATION PAGE - COMPREHENSIVE STYLING
+   Material 3 Design System Compliance
+   Fully Responsive Design (Mobile, Tablet, Desktop)
+   ============================================================================ */
 
-/* Viewport clip radius for left panel (0 top-right, 0.5rem other corners, 0 bottom-right, 0.5rem other corners) */
+/* ============================================================================
+   BASE STYLES & UTILITIES
+   ============================================================================ */
+
+/* Viewport clip radius for left panel */
 .reg-viewport-clip {
   border-top-left-radius: 0;
   border-top-right-radius: 0.5rem;
@@ -8,7 +16,13 @@
   border-bottom-left-radius: 0.5rem;
 }
 
-/* Preview container with aspect ratio and border styling */
+@media (max-width: 767px) {
+  .reg-viewport-clip {
+    border-radius: 0;
+  }
+}
+
+/* Preview container with aspect ratio and styling */
 .reg-preview-container {
   position: relative;
   display: flex;
@@ -22,9 +36,17 @@
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0.5rem;
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-/* Dot pattern background for preview */
+@media (max-width: 767px) {
+  .reg-preview-container {
+    aspect-ratio: auto;
+    min-height: 180px;
+  }
+}
+
+/* Dot pattern background */
 .reg-dot-pattern {
   background-image: radial-gradient(
     circle at 2px 2px,
@@ -34,15 +56,16 @@
   background-size: 24px 24px;
   position: absolute;
   inset: 0;
+  pointer-events: none;
 }
 
-/* Focus management and accessibility */
+/* Focus states */
 .reg-preview-container:focus-within {
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4),
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15),
     0 0 0 2px rgba(100, 181, 246, 0.3) inset;
 }
 
-/* Ensure Material Symbols render properly */
+/* Material Symbols font setup */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   font-family: 'Material Symbols Outlined';
@@ -57,36 +80,424 @@
   direction: ltr;
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Ensure error text is visible */
-.text-error {
-  color: var(--error);
-}
-
-/* Glass panel utility */
+/* Glass panel effect */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* Responsive adjustments for smaller screens */
-@media (max-width: 767px) {
-  .reg-preview-container {
-    aspect-ratio: auto;
-    min-height: 200px;
+/* Error text styling */
+.text-error {
+  color: var(--error);
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN SYSTEM
+   Mobile First Approach with Progressive Enhancement
+   ============================================================================ */
+
+/* ============================================================================
+   EXTRA SMALL SCREENS (320px - 374px)
+   ============================================================================ */
+@media (max-width: 374px) {
+  /* Very tight padding for cramped mobile */
+  main {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
-  .reg-viewport-clip {
-    border-radius: 0;
+  /* Form container adjustments */
+  .max-w-sm {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Reduce font sizes on very small screens */
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Tighter spacing in forms */
+  .space-y-6 > * + * {
+    margin-top: 1.25rem;
+  }
+
+  /* Smaller button padding */
+  button[type="submit"] {
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+
+  /* Reduce icon sizes */
+  .material-symbols-outlined {
+    font-size: inherit;
   }
 }
 
-/* Extra small screens (mobile) */
-@media (max-width: 375px) {
-  .reg-form-container {
+/* ============================================================================
+   SMALL SCREENS (375px - 639px)
+   Mobile Devices (iPhone, Android phones)
+   ============================================================================ */
+@media (min-width: 375px) and (max-width: 639px) {
+  /* Slightly increased spacing for better readability */
+  main {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  /* Improve input touch targets on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    min-height: 2.75rem;
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+
+  /* Larger checkbox for better touch accuracy */
+  input[type="checkbox"] {
+    min-width: 1.25rem;
+    min-height: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* Larger password toggle buttons */
+  button.text-outline-variant {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+  }
+}
+
+/* ============================================================================
+   MEDIUM SCREENS (640px - 767px)
+   Tablets in Portrait Mode
+   ============================================================================ */
+@media (min-width: 640px) and (max-width: 767px) {
+  /* More generous padding on medium screens */
+  main {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  /* Larger max-width to use more screen space */
+  .max-w-6xl {
+    max-width: 100%;
+  }
+
+  /* Better form spacing */
+  .space-y-6 > * + * {
+    margin-top: 1.75rem;
+  }
+
+  /* Improved typography for medium screens */
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.875rem;
+  }
+
+  /* Better button sizing */
+  button[type="submit"] {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 1.125rem;
+  }
+}
+
+/* ============================================================================
+   LARGE SCREENS (768px - 1023px)
+   Tablets in Landscape, Small Laptops
+   ============================================================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Two-column layout becomes visible */
+  .hidden.md\:flex {
+    display: flex;
+  }
+
+  /* Generous padding on tablet landscape */
+  .md\:p-12 {
+    padding: 1.5rem;
+  }
+
+  .md\:p-16 {
+    padding: 2rem;
+  }
+
+  /* Better spacing for tablet */
+  .md\:min-h-auto {
+    min-height: auto;
+  }
+
+  .md\:rounded-xl {
+    border-radius: 0.75rem;
+  }
+
+  /* Form spacing adjustments */
+  .space-y-8 > * + * {
+    margin-top: 2rem;
+  }
+
+  /* Left panel text adjustments */
+  h1 {
+    font-size: 2.25rem;
+  }
+
+  /* Better grid layout */
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ============================================================================
+   EXTRA LARGE SCREENS (1024px+)
+   Desktop Computers, Large Monitors
+   ============================================================================ */
+@media (min-width: 1024px) {
+  /* Full desktop experience */
+  main {
+    padding: 0;
+  }
+
+  /* Full viewport height for desktop */
+  .min-h-screen.md\:min-h-auto {
+    min-height: 100vh;
+  }
+
+  /* Larger typography on desktop */
+  h1 {
+    font-size: 3rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  /* Enhanced spacing for desktop */
+  .space-y-8 > * + * {
+    margin-top: 2rem;
+  }
+
+  /* Better left panel styling */
+  .lg\:p-12 {
+    padding: 3rem;
+  }
+
+  .lg\:text-5xl {
+    font-size: 3rem;
+  }
+
+  /* Improved form layout */
+  .max-w-sm {
+    max-width: 28rem;
+  }
+
+  /* Hover effects on desktop */
+  button:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  input:hover:not(:disabled) {
+    border-bottom-color: var(--primary-container);
+  }
+
+  /* Enhanced shadows on desktop */
+  .shadow-md {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .hover\:shadow-lg:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* ============================================================================
+   ULTRA-WIDE SCREENS (1440px+)
+   Large Desktop Monitors, Premium Displays
+   ============================================================================ */
+@media (min-width: 1440px) {
+  /* Maximum width constraint for content */
+  .max-w-7xl {
+    max-width: 1280px;
+  }
+
+  /* Enhanced typography scaling */
+  h1 {
+    font-size: 3.5rem;
+  }
+
+  /* Better spacing in forms */
+  .space-y-8 > * + * {
+    margin-top: 2.5rem;
+  }
+
+  /* Larger input fields */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  /* Enhanced visual effects */
+  .group-hover\:bg-primary-container\/30:hover {
+    background-color: rgba(0, 99, 152, 0.4);
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY & ANIMATION PREFERENCES
+   ============================================================================ */
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-spin,
+  .animate-pulse {
+    animation: none;
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  .glass-panel {
+    background: rgba(30, 30, 30, 0.8);
+  }
+
+  .reg-dot-pattern {
+    opacity: 0.15;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  input,
+  button {
+    border-width: 2px;
+  }
+
+  .border-b-2 {
+    border-width: 3px;
+  }
+}
+
+/* ============================================================================
+   FORM STATES & INTERACTIONS
+   ============================================================================ */
+
+/* Input focus states */
+input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+  transition: border-color 0.2s ease;
+}
+
+input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Button states */
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Checkbox custom styling */
+input[type="checkbox"]:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+/* Animation for banners */
+@keyframes slideInFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slideInFade 0.3s ease-out;
+}
+
+/* Smooth color transitions */
+.transition-colors {
+  transition: color 0.2s ease;
+}
+
+/* Border transitions */
+.transition-borders {
+  transition: border-color 0.2s ease;
+}
+
+/* Transform transitions */
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+/* All transitions */
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+@media print {
+  body {
+    background-color: white;
+  }
+
+  .md:hidden,
+  .fixed {
+    display: none;
+  }
+
+  main {
+    padding: 0;
+  }
+
+  button {
+    border: 1px solid #000;
+  }
+
+  input {
+    border: 1px solid #000;
   }
 }
