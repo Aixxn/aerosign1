@@ -1,117 +1,193 @@
 /* ============================================================================
-   LoginPage.css
-   Responsive login experience with brand panel + form container
+   LoginPage.css - Material 3 Design Reference
+   Minimal underline input style with centered layout and side graphic panel
    ========================================================================== */
 
-.login-page {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #000a1a 0%, #1a1f3a 100%);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: var(--on-surface, #e8e8f0);
+:root {
+  /* Material 3 Color Palette */
+  --primary: #006398;
+  --primary-container: #64b5f6;
+  --on-primary: #ffffff;
+  --surface: #f7f9ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f1f4f9;
+  --on-surface: #181c20;
+  --on-surface-variant: #404850;
+  --outline-variant: #c0c7d1;
+  --outline: #707881;
+  --secondary: #006e1c;
+  --secondary-fixed-dim: #78dc77;
+  --surface-variant: #e0e2e8;
+  --surface-dim: #d7dadf;
+  --error: #ba1a1a;
 }
 
-/* ============================================================================
-   Left Panel - Brand
-   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
 
-.login-left-panel {
+.login-page {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 4rem;
-  background: linear-gradient(135deg, rgba(0, 99, 152, 0.15) 0%, rgba(0, 99, 152, 0.05) 100%);
+  min-height: 100vh;
+  background: var(--surface);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--on-surface);
   position: relative;
   overflow: hidden;
 }
 
-.login-brand-container {
+/* ============================================================================
+   Main Content Area
+   ========================================================================== */
+
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
   position: relative;
-  z-index: 2;
-  text-align: center;
-  max-width: 400px;
+  overflow: hidden;
 }
 
-.login-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary, #006398);
-  margin-bottom: 3rem;
-  letter-spacing: -0.5px;
-}
-
-.login-logo .material-symbols-outlined {
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.login-headline {
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 2.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-  margin-bottom: 1rem;
-  color: var(--on-surface, #e8e8f0);
-  letter-spacing: -0.5px;
-}
-
-.login-tagline {
-  font-size: 1rem;
-  line-height: 1.5;
-  color: rgba(232, 232, 240, 0.7);
-  margin-bottom: 0;
-}
-
-/* Dot pattern background */
-.login-dot-pattern {
+/* Background blur elements */
+.login-background-blur {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: radial-gradient(circle, rgba(0, 99, 152, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  z-index: 1;
+  opacity: 0.1;
 }
 
-/* ============================================================================
-   Right Panel - Form
-   ========================================================================== */
+.login-background-blur::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 40%;
+  height: 40%;
+  background: var(--primary);
+  border-radius: 50%;
+  filter: blur(120px);
+}
 
-.login-right-panel {
+.login-background-blur::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  left: -5%;
+  width: 40%;
+  height: 40%;
+  background: var(--primary-container);
+  border-radius: 50%;
+  filter: blur(120px);
+}
+
+.login-container {
+  width: 100%;
+  max-width: 448px;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 4rem;
-  background: linear-gradient(135deg, #1a1f3a 0%, #0f1420 100%);
-  position: relative;
-}
-
-.login-form-container {
-  width: 100%;
-  max-width: 400px;
+  gap: 3rem;
 }
 
 /* ============================================================================
-   Banners
+   Header - Branding
+   ========================================================================== */
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.login-icon {
+  font-size: 2.25rem !important;
+  color: var(--primary);
+  font-variation-settings: 'FILL' 1;
+}
+
+.login-title {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1.875rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--on-surface);
+  margin: 0 0 0.5rem 0;
+}
+
+.login-subtitle {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ============================================================================
+   Login Card
+   ========================================================================== */
+
+.login-card {
+  background: var(--surface-container-lowest);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 99, 152, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card-content {
+  padding: 2rem;
+}
+
+@media (min-width: 768px) {
+  .login-card-content {
+    padding: 2.5rem;
+  }
+}
+
+.login-card-header {
+  margin-bottom: 2rem;
+}
+
+.login-card-title {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.01em;
+}
+
+.login-card-description {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   Banners (Success/Error)
    ========================================================================== */
 
 .login-banner {
   display: flex;
   gap: 1rem;
   padding: 1rem;
-  border-radius: 0.75rem;
-  margin-bottom: 2rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1.5rem;
   align-items: flex-start;
   font-size: 0.875rem;
   animation: slideInDown 0.3s ease-out;
@@ -141,15 +217,15 @@
 }
 
 .login-banner .material-symbols-outlined {
-  font-size: 1.25rem;
+  font-size: 1.25rem !important;
   flex-shrink: 0;
   margin-top: 0.125rem;
 }
 
 .banner-title {
   font-weight: 600;
-  margin-bottom: 0.25rem;
   margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
 }
 
 .banner-text {
@@ -175,98 +251,161 @@
 }
 
 .login-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--on-surface, #e8e8f0);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  display: block;
+}
+
+.login-label-wrapper {
   display: flex;
-  align-items: center;
-  gap: 0.25rem;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
 }
 
-.required-asterisk {
-  color: #ef4444;
-  font-weight: 600;
-}
-
-.login-input {
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(232, 232, 240, 0.2);
-  border-radius: 0.5rem;
-  background: rgba(232, 232, 240, 0.05);
-  color: var(--on-surface, #e8e8f0);
-  font-size: 0.9375rem;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  transition: all 0.2s ease;
-}
-
-.login-input::placeholder {
-  color: rgba(232, 232, 240, 0.4);
-}
-
-.login-input:focus {
-  outline: none;
-  border-color: var(--primary, #006398);
-  background: rgba(232, 232, 240, 0.08);
-  box-shadow: 0 0 0 3px rgba(0, 99, 152, 0.1);
-}
-
-.login-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: rgba(232, 232, 240, 0.02);
-}
-
-.login-input-error {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
-}
-
-.login-input-error:focus {
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
-
-/* Password Input Wrapper */
-.password-input-wrapper {
+/* Input Group with Underline */
+.login-input-group {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.password-toggle-btn {
-  position: absolute;
-  right: 0.75rem;
-  background: none;
+.login-input {
+  width: 100%;
+  background: transparent;
   border: none;
-  color: rgba(232, 232, 240, 0.6);
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
+  border-bottom: 1px solid rgba(192, 199, 209, 0.4);
+  padding: 0.75rem 0;
+  font-size: 0.9375rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--on-surface);
+  transition: border-color 0.3s ease, color 0.3s ease;
+  outline: none;
 }
 
-.password-toggle-btn:hover:not(:disabled) {
-  color: var(--on-surface, #e8e8f0);
+.login-input::placeholder {
+  color: var(--surface-dim);
 }
 
-.password-toggle-btn:disabled {
+.login-input:focus {
+  border-bottom-color: var(--primary);
+}
+
+.login-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.password-toggle-btn .material-symbols-outlined {
-  font-size: 1.25rem;
+/* Animated underline */
+.login-input-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--primary);
+  transition: width 0.5s ease;
 }
 
-/* Error Messages */
-.login-error-message {
+.login-input-group:focus-within .login-input-underline {
+  width: 100%;
+}
+
+/* Password input group */
+.login-password-group {
+  gap: 0.5rem;
+}
+
+/* ============================================================================
+   System Status
+   ========================================================================== */
+
+.login-system-status {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.login-status-dots {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.status-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--secondary);
+  display: inline-block;
+}
+
+.status-dot:nth-child(2) {
+  background: var(--secondary-fixed-dim);
+}
+
+.status-dot:nth-child(3) {
+  background: var(--surface-variant);
+}
+
+.login-status-text {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.625rem;
+  color: var(--outline);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   Buttons
+   ========================================================================== */
+
+.login-submit-btn {
+  width: 100%;
+  background: linear-gradient(to right, var(--primary), var(--primary-container));
+  color: var(--on-primary);
+  border: none;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 99, 152, 0.2);
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.login-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-submit-btn .material-symbols-outlined {
+  font-size: 1.125rem !important;
+}
+
+/* Error message */
+.login-error-message {
   font-size: 0.8125rem;
-  color: #ef4444;
+  color: var(--error);
   margin: 0;
+  margin-top: 0.5rem;
   animation: fadeIn 0.2s ease;
 }
 
@@ -279,245 +418,341 @@
   }
 }
 
-.login-error-message .material-symbols-outlined {
-  font-size: 1rem;
-  flex-shrink: 0;
+/* Forgot Password Link */
+.login-forgot-password {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0;
+  text-decoration: none;
+}
+
+.login-forgot-password:hover {
+  color: var(--primary-container);
 }
 
 /* ============================================================================
-   Buttons
+   Card Footer
    ========================================================================== */
 
-.login-submit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, var(--primary, #006398) 0%, #004a7a 100%);
-  color: #fff;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+.login-card-footer {
+  background: var(--surface-container-low);
+  padding: 1.5rem 2rem;
+  text-align: center;
+  border-top: 1px solid var(--surface-variant);
 }
 
-.login-submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 99, 152, 0.3);
-}
-
-.login-submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.login-submit-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.login-submit-btn .material-symbols-outlined {
-  font-size: 1.25rem;
-}
-
-/* Loading spinner */
-.login-spinner {
-  display: inline-block;
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+@media (min-width: 768px) {
+  .login-card-footer {
+    padding: 1.5rem 2.5rem;
   }
 }
 
-/* Divider */
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 1.5rem 0;
-  color: rgba(232, 232, 240, 0.5);
+.login-footer-text {
   font-size: 0.875rem;
+  color: var(--on-surface-variant);
+  margin: 0;
 }
 
-.login-divider::before,
-.login-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(232, 232, 240, 0.1), transparent);
-}
-
-/* Register Button */
-.login-register-btn {
-  padding: 0.875rem 1.5rem;
-  background: rgba(232, 232, 240, 0.08);
-  color: var(--on-surface, #e8e8f0);
-  border: 1px solid rgba(232, 232, 240, 0.2);
-  border-radius: 0.5rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
+.login-footer-link {
+  font-weight: 700;
+  color: var(--primary);
+  background: none;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 0;
+  text-decoration: none;
+  transition: text-decoration 0.2s ease;
 }
 
-.login-register-btn:hover:not(:disabled) {
-  background: rgba(232, 232, 240, 0.12);
-  border-color: rgba(232, 232, 240, 0.4);
-  transform: translateY(-2px);
+.login-footer-link:hover:not(:disabled) {
+  text-decoration: underline;
 }
 
-.login-register-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.login-register-btn:disabled {
+.login-footer-link:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 /* ============================================================================
-   Footer
+   Global Footer
    ========================================================================== */
 
-.login-footer-note {
+.login-global-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 3rem;
+  opacity: 0.4;
   text-align: center;
-  font-size: 0.75rem;
-  color: rgba(232, 232, 240, 0.5);
-  margin-top: 2rem;
-  line-height: 1.5;
 }
 
-.login-link {
-  color: var(--primary, #006398);
+@media (min-width: 768px) {
+  .login-global-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+}
+
+.login-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .login-footer-meta {
+    justify-content: flex-start;
+    margin-bottom: 0;
+  }
+}
+
+.login-footer-item {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.login-footer-divider {
+  width: 1px;
+  height: 0.75rem;
+  background: var(--outline-variant);
+}
+
+.login-footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .login-footer-links {
+    justify-content: flex-end;
+  }
+}
+
+.login-footer-link-item {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
-.login-link:hover {
-  color: #0089c8;
-  text-decoration: underline;
+.login-footer-link-item:hover {
+  color: var(--primary);
 }
 
 /* ============================================================================
-   Responsive - Tablet (768px to 1024px)
+   Right Side Panel (Desktop Only)
    ========================================================================== */
 
-@media (max-width: 1024px) {
-  .login-page {
-    grid-template-columns: 1fr;
-  }
+.login-side-panel {
+  display: none;
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 33.333%;
+  height: 100vh;
+  overflow: hidden;
+}
 
-  .login-left-panel {
-    padding: 3rem 2rem;
-    min-height: 30vh;
-  }
-
-  .login-headline {
-    font-size: 2rem;
-  }
-
-  .login-right-panel {
-    padding: 3rem 2rem;
+@media (min-width: 1024px) {
+  .login-side-panel {
+    display: block;
   }
 }
 
+.login-side-panel-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.login-side-panel-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-side-panel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, var(--surface), transparent);
+}
+
 /* ============================================================================
-   Responsive - Mobile (< 768px)
+   Overlay Card (on Right Panel)
+   ========================================================================== */
+
+.login-overlay-card {
+  position: absolute;
+  bottom: 5rem;
+  left: 2.5rem;
+  max-width: 320px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 99, 152, 0.1);
+}
+
+.login-overlay-icon {
+  font-size: 1.5rem !important;
+  color: var(--primary);
+  display: block;
+  margin-bottom: 1rem;
+  font-variation-settings: 'FILL' 0;
+}
+
+.login-overlay-title {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  margin: 0 0 0.5rem 0;
+}
+
+.login-overlay-text {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--on-surface-variant);
+  margin: 0 0 1rem 0;
+}
+
+.login-overlay-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(192, 199, 209, 0.2);
+}
+
+.login-overlay-meta-item {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-size: 0.625rem;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.login-overlay-active {
+  color: var(--secondary);
+}
+
+/* ============================================================================
+   Responsive - Tablet (768px)
    ========================================================================== */
 
 @media (max-width: 768px) {
-  .login-page {
-    grid-template-columns: 1fr;
-    min-height: auto;
-  }
-
-  .login-left-panel {
-    padding: 2rem 1.5rem;
-    min-height: 25vh;
-    justify-content: flex-end;
-  }
-
-  .login-headline {
-    font-size: 1.75rem;
-  }
-
-  .login-tagline {
-    font-size: 0.9375rem;
-  }
-
-  .login-right-panel {
-    padding: 2rem 1.5rem;
-    min-height: auto;
-  }
-
-  .login-form-container {
-    max-width: 100%;
-  }
-
-  .login-submit-btn {
-    width: 100%;
-  }
-
-  .login-register-btn {
-    width: 100%;
-  }
-
-  .login-footer-note {
-    font-size: 0.7rem;
-    margin-top: 1.5rem;
-  }
-}
-
-/* ============================================================================
-   Responsive - Small Mobile (< 480px)
-   ========================================================================== */
-
-@media (max-width: 480px) {
-  .login-page {
-    min-height: 100dvh;
-  }
-
-  .login-left-panel {
+  .login-main {
     padding: 1.5rem 1rem;
-    min-height: 20vh;
   }
 
-  .login-headline {
+  .login-container {
+    gap: 2rem;
+  }
+
+  .login-card-content {
+    padding: 1.75rem;
+  }
+
+  .login-title {
     font-size: 1.5rem;
   }
 
-  .login-logo {
-    margin-bottom: 2rem;
-  }
-
-  .login-right-panel {
-    padding: 1.5rem 1rem;
+  .login-card-title {
+    font-size: 1.125rem;
   }
 
   .login-form {
     gap: 1.25rem;
   }
+}
 
-  .login-input,
-  .login-submit-btn,
-  .login-register-btn {
-    padding: 0.75rem 1rem;
+/* ============================================================================
+   Responsive - Mobile (< 480px)
+   ========================================================================== */
+
+@media (max-width: 480px) {
+  .login-main {
+    padding: 1rem;
+    min-height: 100dvh;
+  }
+
+  .login-container {
+    gap: 1.5rem;
+  }
+
+  .login-header {
+    margin-bottom: 1rem;
+  }
+
+  .login-icon {
+    font-size: 2rem !important;
+  }
+
+  .login-title {
+    font-size: 1.375rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.5625rem;
+  }
+
+  .login-card-content {
+    padding: 1.5rem;
+  }
+
+  .login-card-title {
+    font-size: 1rem;
+  }
+
+  .login-input {
+    padding: 0.625rem 0;
     font-size: 16px; /* Prevent zoom on iOS */
   }
 
   .login-label {
-    font-size: 0.8125rem;
+    font-size: 0.625rem;
+  }
+
+  .login-form {
+    gap: 1rem;
+  }
+
+  .login-submit-btn {
+    padding: 0.875rem;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+  }
+
+  .login-global-footer {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .login-footer-meta {
+    gap: 0.75rem;
   }
 }

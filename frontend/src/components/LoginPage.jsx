@@ -6,7 +6,7 @@ import './LoginPage.css'
  * LoginPage Component
  * 
  * Full-page login experience with Supabase Auth integration.
- * Handles email/password authentication and session management.
+ * Matches Material 3 design with minimal underline input style.
  * 
  * Props:
  * - onSuccess: callback when login succeeds (receives user object)
@@ -126,165 +126,193 @@ export default function LoginPage({ onSuccess, onNavigateToRegister }) {
 
   return (
     <div className="login-page">
-      {/* Left Panel - Brand & Social Proof */}
-      <div className="login-left-panel">
-        <div className="login-brand-container">
-          <div className="login-logo">
-            <span className="material-symbols-outlined">draw</span>
-            <span>AeroSign</span>
+      {/* Main Content */}
+      <main className="login-main">
+        {/* Abstract Background Elements */}
+        <div className="login-background-blur" aria-hidden="true"></div>
+
+        <div className="login-container">
+          {/* Branding Header */}
+          <div className="login-header">
+            <div className="login-icon-wrapper">
+              <span className="material-symbols-outlined login-icon">fingerprint</span>
+            </div>
+            <h1 className="login-title">AeroSign</h1>
+            <p className="login-subtitle">High-Performance Signature Capture</p>
           </div>
-          <h1 className="login-headline">Sign In</h1>
-          <p className="login-tagline">Access your signature verification dashboard</p>
-        </div>
 
-        {/* Background pattern */}
-        <div className="login-dot-pattern" aria-hidden="true"></div>
-      </div>
-
-      {/* Right Panel - Login Form */}
-      <div className="login-right-panel">
-        <div className="login-form-container">
-          {/* Success Banner */}
-          {success && (
-            <div className="login-banner login-banner-success" role="alert" aria-live="polite">
-              <span className="material-symbols-outlined">check_circle</span>
-              <div>
-                <p className="banner-title">Login Successful!</p>
-                <p className="banner-text">Redirecting to signature canvas...</p>
+          {/* Login Card */}
+          <div className="login-card">
+            <div className="login-card-content">
+              <div className="login-card-header">
+                <h2 className="login-card-title">Welcome Back</h2>
+                <p className="login-card-description">Access your secure signing environment.</p>
               </div>
-            </div>
-          )}
 
-          {/* Error Banner */}
-          {error && (
-            <div className="login-banner login-banner-error" role="alert" aria-live="assertive">
-              <span className="material-symbols-outlined">error</span>
-              <div>
-                <p className="banner-title">Login Failed</p>
-                <p className="banner-text">{error}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="login-form" noValidate>
-            {/* Email Field */}
-            <div className="login-form-group">
-              <label htmlFor="email" className="login-label">
-                Email Address
-                <span className="required-asterisk" aria-label="required">*</span>
-              </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                disabled={loading}
-                placeholder="you@example.com"
-                className={`login-input ${fieldErrors.email ? 'login-input-error' : ''}`}
-                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
-                autoComplete="email"
-                required
-              />
-              {fieldErrors.email && (
-                <p id="email-error" className="login-error-message">
-                  <span className="material-symbols-outlined">warning</span>
-                  {fieldErrors.email}
-                </p>
+              {/* Success Banner */}
+              {success && (
+                <div className="login-banner login-banner-success" role="alert" aria-live="polite">
+                  <span className="material-symbols-outlined">check_circle</span>
+                  <div>
+                    <p className="banner-title">Login Successful!</p>
+                    <p className="banner-text">Redirecting to signature canvas...</p>
+                  </div>
+                </div>
               )}
-            </div>
 
-            {/* Password Field */}
-            <div className="login-form-group">
-              <label htmlFor="password" className="login-label">
-                Password
-                <span className="required-asterisk" aria-label="required">*</span>
-              </label>
-              <div className="password-input-wrapper">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  disabled={loading}
-                  placeholder="••••••••"
-                  className={`login-input ${fieldErrors.password ? 'login-input-error' : ''}`}
-                  aria-describedby={fieldErrors.password ? 'password-error' : undefined}
-                  autoComplete="current-password"
-                  required
-                />
+              {/* Error Banner */}
+              {error && (
+                <div className="login-banner login-banner-error" role="alert" aria-live="assertive">
+                  <span className="material-symbols-outlined">error</span>
+                  <div>
+                    <p className="banner-title">Login Failed</p>
+                    <p className="banner-text">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="login-form" noValidate>
+                {/* Email Field */}
+                <div className="login-form-group">
+                  <label htmlFor="email" className="login-label">
+                    Email Address
+                  </label>
+                  <div className="login-input-group">
+                    <input
+                      id="email"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="name@company.com"
+                      className="login-input"
+                      aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+                      autoComplete="email"
+                      required
+                    />
+                    <span className="login-input-underline"></span>
+                  </div>
+                  {fieldErrors.email && (
+                    <p id="email-error" className="login-error-message">
+                      {fieldErrors.email}
+                    </p>
+                  )}
+                </div>
+
+                {/* Password Field */}
+                <div className="login-form-group">
+                  <div className="login-label-wrapper">
+                    <label htmlFor="password" className="login-label">
+                      Password
+                    </label>
+                    <a href="#" className="login-forgot-password">
+                      Forgot Password?
+                    </a>
+                  </div>
+                  <div className="login-input-group login-password-group">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      disabled={loading}
+                      placeholder="••••••••"
+                      className="login-input"
+                      aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                      autoComplete="current-password"
+                      required
+                    />
+                    <span className="login-input-underline"></span>
+                  </div>
+                  {fieldErrors.password && (
+                    <p id="password-error" className="login-error-message">
+                      {fieldErrors.password}
+                    </p>
+                  )}
+                </div>
+
+                {/* System Status */}
+                <div className="login-system-status">
+                  <div className="login-status-dots">
+                    <span className="status-dot"></span>
+                    <span className="status-dot"></span>
+                    <span className="status-dot"></span>
+                  </div>
+                  <span className="login-status-text">System Ready // AES-256 Validated</span>
+                </div>
+
+                {/* Submit Button */}
                 <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowPassword(!showPassword)}
+                  type="submit"
                   disabled={loading}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  title={showPassword ? 'Hide password' : 'Show password'}
+                  className="login-submit-btn"
+                  aria-label={loading ? 'Signing in...' : 'Sign in'}
                 >
-                  <span className="material-symbols-outlined">
-                    {showPassword ? 'visibility' : 'visibility_off'}
-                  </span>
-                </button>
-              </div>
-              {fieldErrors.password && (
-                <p id="password-error" className="login-error-message">
-                  <span className="material-symbols-outlined">warning</span>
-                  {fieldErrors.password}
-                </p>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="login-submit-btn"
-              aria-label={loading ? 'Signing in...' : 'Sign in'}
-            >
-              {loading ? (
-                <>
-                  <span className="login-spinner" aria-hidden="true"></span>
-                  <span>Signing In...</span>
-                </>
-              ) : (
-                <>
                   <span>Sign In</span>
                   <span className="material-symbols-outlined">arrow_forward</span>
-                </>
-              )}
-            </button>
-          </form>
+                </button>
+              </form>
+            </div>
 
-          {/* Divider */}
-          <div className="login-divider">
-            <span>New to AeroSign?</span>
+            {/* Card Footer */}
+            <div className="login-card-footer">
+              <p className="login-footer-text">
+                New to AeroSign?{' '}
+                <button
+                  type="button"
+                  className="login-footer-link"
+                  onClick={onNavigateToRegister}
+                  disabled={loading}
+                >
+                  Create Account
+                </button>
+              </p>
+            </div>
           </div>
 
-          {/* Register Link */}
-          <button
-            type="button"
-            className="login-register-btn"
-            onClick={onNavigateToRegister}
-            disabled={loading}
-          >
-            Create an Account
-          </button>
-
-          {/* Footer Note */}
-          <p className="login-footer-note">
-            By signing in, you agree to our{' '}
-            <a href="#" className="login-link">
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="#" className="login-link">
-              Privacy Policy
-            </a>
-          </p>
+          {/* Global Footer */}
+          <div className="login-global-footer">
+            <div className="login-footer-meta">
+              <span className="login-footer-item">VER: 4.2.0-LENS</span>
+              <span className="login-footer-divider"></span>
+              <span className="login-footer-item">ENC: RSA-4096</span>
+            </div>
+            <div className="login-footer-links">
+              <a href="#" className="login-footer-link-item">Privacy</a>
+              <a href="#" className="login-footer-link-item">Terms</a>
+              <a href="#" className="login-footer-link-item">Security</a>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
+
+      {/* Right Side Graphic Panel (Desktop only) */}
+      <aside className="login-side-panel" aria-hidden="true">
+        <div className="login-side-panel-content">
+          <img
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4DE8NeJ5d3PBejBda1He7Ts8vqtCaOK7ucNRXOU4n0tDHidOHUsvqAqrKWS1dU2WNOpFHmp59INJH8HcnIBgkMJ1jAC-foqSeMD0CfHFziPTdOnbG231QP9Iy-M4Eqjuk6--2MDnTkeIup0sCHezOBzZkKP-rlp5-SvAFMLqJLvy2EiMrtg8RlDkJHbQGhS9VMMUD2RqNW4_AYbexwO5rlbj3R7XT-l4k3_aBfFW6tEEBRTA8UF70tl4E___s_Y0MrItPicGKsk4z"
+            alt="Technical high-end interface showing blue digital signature coordinates and optical lens grid patterns"
+            className="login-side-panel-image"
+          />
+          <div className="login-side-panel-overlay"></div>
+
+          {/* Technical Overlay Card */}
+          <div className="login-overlay-card">
+            <span className="material-symbols-outlined login-overlay-icon">precision_manufacturing</span>
+            <h3 className="login-overlay-title">Precision Engine</h3>
+            <p className="login-overlay-text">
+              Our computer vision engine captures 120 datapoints per second, ensuring sub-millimeter biometric verification for every signature.
+            </p>
+            <div className="login-overlay-meta">
+              <span className="login-overlay-meta-item">LATENCY: &lt; 8ms</span>
+              <span className="login-overlay-meta-item login-overlay-active">ACTIVE</span>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   )
 }
