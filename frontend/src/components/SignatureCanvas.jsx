@@ -31,7 +31,7 @@ class ExponentialSmoothing {
   }
 }
 
-function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoading, userId = 'user_default' }) {
+function SignatureCanvas({ onComplete, onBack, onHistory, error: appError, loading: appLoading, userId = 'user_default', user, onSignOut }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -611,14 +611,16 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
           <div className="logo">AeroSign</div>
           <div className="nav-links desktop-only">
             <a href="#" className="nav-link active">Capture</a>
-            <a href="#" className="nav-link">History</a>
+            <button className="nav-link-btn" onClick={onHistory} title="View signature history">History</button>
           </div>
           <div className="nav-icons">
-            <button className="icon-btn" title="Help" aria-label="Help">
-              <span className="material-symbols-outlined">help</span>
-            </button>
-            <button className="icon-btn" title="Account" aria-label="Account">
-              <span className="material-symbols-outlined">account_circle</span>
+            <button 
+              className="icon-btn" 
+              title="Sign out" 
+              aria-label="Sign out"
+              onClick={onSignOut}
+            >
+              <span className="material-symbols-outlined">logout</span>
             </button>
           </div>
         </nav>
@@ -974,14 +976,14 @@ function SignatureCanvas({ onComplete, onBack, error: appError, loading: appLoad
           <span className="material-symbols-outlined">ink_highlighter</span>
           <span className="nav-label">Capture</span>
         </a>
-        <a href="#" className="mobile-nav-item" aria-label="History">
+        <button className="mobile-nav-item" onClick={onHistory} aria-label="History">
           <span className="material-symbols-outlined">history</span>
           <span className="nav-label">History</span>
-        </a>
-        <a href="#" className="mobile-nav-item" aria-label="Settings">
-          <span className="material-symbols-outlined">settings</span>
-          <span className="nav-label">Settings</span>
-        </a>
+        </button>
+        <button className="mobile-nav-item" onClick={onSignOut} aria-label="Sign out">
+          <span className="material-symbols-outlined">logout</span>
+          <span className="nav-label">Sign Out</span>
+        </button>
       </nav>
     </div>
   )

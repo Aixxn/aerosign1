@@ -4,6 +4,7 @@ import LandingPage from './components/LandingPage'
 import RegistrationPage from './components/RegistrationPage'
 import LoginPage from './components/LoginPage'
 import SignatureCanvas from './components/SignatureCanvas'
+import SignatureHistory from './components/SignatureHistory'
 import { useAuth } from './hooks/useAuth'
 import { apiClient } from './utils/api'
 
@@ -12,7 +13,7 @@ function App() {
   const { user, session, isLoading: authLoading, error: authError, signOut } = useAuth()
 
   // Page routing state
-  const [currentPage, setCurrentPage] = useState('landing') // 'landing' | 'register' | 'login' | 'app'
+  const [currentPage, setCurrentPage] = useState('landing') // 'landing' | 'register' | 'login' | 'app' | 'history'
   const [step, setStep] = useState(1)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -121,9 +122,9 @@ function App() {
   }
 
   const handleStartSigning = () => {
-    // If not authenticated, show registration page
+    // If not authenticated, show login page
     if (!user) {
-      setCurrentPage('register')
+      setCurrentPage('login')
       return
     }
 
@@ -162,6 +163,15 @@ function App() {
     handleReset()
     // Optional: Sign out when returning to landing
     // await signOut()
+  }
+
+  const handleNavigateToHistory = () => {
+    setCurrentPage('history')
+  }
+
+  const handleHistoryBack = () => {
+    setCurrentPage('app')
+    setStep(1)
   }
 
   // Loading auth state
@@ -227,9 +237,21 @@ function App() {
       <SignatureCanvas 
         onComplete={handleSignaturesComplete} 
         onBack={handleBackToLanding}
+        onHistory={handleNavigateToHistory}
         error={error}
         loading={loading}
         userId={userId}
+        user={user}
+        onSignOut={signOut}
+      />
+    )
+  }
+
+  // Route: Signature History
+  if (currentPage === 'history') {
+    return (
+      <SignatureHistory 
+        onBack={handleHistoryBack}
         user={user}
         onSignOut={signOut}
       />

@@ -64,6 +64,29 @@
   color: #0369a1;
 }
 
+.nav-link-btn {
+  background: none;
+  border: none;
+  color: var(--on-surface-variant);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.nav-link-btn:hover {
+  background: rgba(3, 105, 161, 0.08);
+  color: #0369a1;
+}
+
+.nav-link-btn:active {
+  transform: scale(0.95);
+}
+
 .nav-icons {
   display: flex;
   gap: 0.75rem;
