@@ -57,6 +57,10 @@ dist/
 .env.local
 .env.*.local
 frontend/.vite
+frontend/.vite/
+frontend/.eslintcache
+frontend/package-lock.json
+frontend/yarn.lock
 
 # ============================================================================
 # Large Datasets & Backups
