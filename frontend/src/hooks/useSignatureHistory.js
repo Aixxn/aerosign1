@@ -1,20 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../utils/supabaseClient'
-import { useAuth } from './useAuth'
+import { apiClient } from '../utils/api'
 
 /**
  * Custom hook for fetching and managing signature verification history
  * 
  * Features:
- * - Fetches verification events from Supabase
+ * - Fetches signatures from Python backend API (/api/users/{userId}/signatures)
  * - Pagination support (50 per page)
- * - Search by filename
+ * - Search by filename/metadata
  * - Filter by date range
- * - Filter by confidence range
  * - Real-time loading/error states
+ * 
+ * @param {string} userId - The user ID to fetch signatures for
  */
-export function useSignatureHistory() {
-  const { user } = useAuth()
+export function useSignatureHistory(userId) {
   
   // Data state
   const [verifications, setVerifications] = useState([])
@@ -28,18 +27,19 @@ export function useSignatureHistory() {
   const [searchQuery, setSearchQuery] = useState('')
   const [dateFrom, setDateFrom] = useState(null)
   const [dateTo, setDateTo] = useState(null)
-  const [confidenceMin, setConfidenceMin] = useState(0)
-  const [confidenceMax, setConfidenceMax] = useState(100)
   
   // UI state
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   /**
-   * Fetch signature verifications from Supabase
+   * Fetch signatures from Python backend API
    */
   const fetchVerifications = useCallback(async () => {
-    if (!user?.id) {
+    console.log('[useSignatureHistory] fetchVerifications called, userId:', userId)
+    
+    if (!userId) {
+      console.log('[useSignatureHistory] No userId provided, returning empty')
       setVerifications([])
       setTotalCount(0)
       return
@@ -49,69 +49,78 @@ export function useSignatureHistory() {
     setError(null)
 
     try {
-      // Build query
-      let query = supabase
-        .from('signature_verifications')
-        .select(
-          `
-          id,
-          name,
-          created_at,
-          confidence,
-          candidate_signature_id,
-          model_used,
-          signatures:candidate_signature_id (
-            signature_data,
-            point_count
-          )
-          `,
-          { count: 'exact' }
-        )
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      // Apply search filter (filename)
+      // Fetch all signatures from backend
+      const url = `/api/users/${userId}/signatures`
+      console.log('[useSignatureHistory] Fetching from URL:', url)
+      
+      const response = await apiClient.get(url)
+      console.log('[useSignatureHistory] Full backend response:', response.data)
+      console.log('[useSignatureHistory] Response signatures array:', response.data.signatures)
+      console.log('[useSignatureHistory] Response signatures count:', response.data.signatures?.length || 0)
+      
+      let allSignatures = response.data.signatures || []
+      console.log('[useSignatureHistory] After parsing, allSignatures:', allSignatures)
+      
+      // Apply search filter (matches against signature_id or metadata)
       if (searchQuery.trim()) {
-        query = query.ilike('name', `%${searchQuery}%`)
+        allSignatures = allSignatures.filter(sig => {
+          const searchLower = searchQuery.toLowerCase()
+          return (
+            sig.signature_id?.toLowerCase().includes(searchLower) ||
+            sig.session_id?.toLowerCase().includes(searchLower) ||
+            sig.metadata?.filename?.toLowerCase().includes(searchLower)
+          )
+        })
       }
 
       // Apply date range filter
-      if (dateFrom) {
-        query = query.gte('created_at', dateFrom)
-      }
-      if (dateTo) {
-        query = query.lte('created_at', dateTo)
+      if (dateFrom || dateTo) {
+        allSignatures = allSignatures.filter(sig => {
+          const sigDate = new Date(sig.saved_at)
+          if (dateFrom && sigDate < new Date(dateFrom)) return false
+          if (dateTo) {
+            const dateToEnd = new Date(dateTo)
+            dateToEnd.setHours(23, 59, 59, 999)
+            if (sigDate > dateToEnd) return false
+          }
+          return true
+        })
       }
 
-      // Apply confidence range filter
-      query = query
-        .gte('confidence', confidenceMin)
-        .lte('confidence', confidenceMax)
+      // Sort by date descending (most recent first)
+      allSignatures.sort((a, b) => new Date(b.saved_at) - new Date(a.saved_at))
 
-      // Fetch total count first
-      const { count } = await query
+      const totalCount = allSignatures.length
 
       // Apply pagination
       const offset = (page - 1) * pageSize
-      query = query.range(offset, offset + pageSize - 1)
+      const paginatedSignatures = allSignatures.slice(offset, offset + pageSize)
 
-      const { data, error: fetchError } = await query
+      // Transform backend format to match expected format
+      const formattedSignatures = paginatedSignatures.map(sig => ({
+        id: sig.signature_id,
+        name: sig.metadata?.filename || `Signature ${sig.signature_id.substr(0, 8)}`,
+        created_at: sig.saved_at,
+        candidate_signature_id: sig.signature_id,
+        model_used: sig.metadata?.model || 'siamese_lstm_pytorch',
+        signature: {
+          signature_data: sig.signature_data || [],
+          point_count: sig.point_count
+        },
+        details: sig.metadata
+      }))
 
-      if (fetchError) {
-        throw fetchError
-      }
-
-      setTotalCount(count || 0)
-      setVerifications(data || [])
+      setTotalCount(totalCount || 0)
+      setVerifications(formattedSignatures || [])
     } catch (err) {
-      console.error('Error fetching verifications:', err)
-      setError(err.message || 'Failed to load signature history')
+      console.error('[useSignatureHistory] Error fetching signatures:', err)
+      setError(err.userMessage || err.message || 'Failed to fetch signature history from backend')
       setVerifications([])
       setTotalCount(0)
     } finally {
       setLoading(false)
     }
-  }, [user?.id, page, pageSize, searchQuery, dateFrom, dateTo, confidenceMin, confidenceMax])
+  }, [userId, page, pageSize, searchQuery, dateFrom, dateTo])
 
   // Fetch data when filters or pagination changes
   useEffect(() => {
@@ -136,39 +145,24 @@ export function useSignatureHistory() {
     setPage(1)
   }, [])
 
-  const handleConfidenceMinChange = useCallback((value) => {
-    setConfidenceMin(value)
-    setPage(1)
-  }, [])
-
-  const handleConfidenceMaxChange = useCallback((value) => {
-    setConfidenceMax(value)
-    setPage(1)
-  }, [])
-
   /**
-   * Delete a verification record
+   * Delete a signature (note: backend stores signatures, not verifications)
+   * For now, this is a placeholder - backend storage doesn't support deletion
    */
   const deleteVerification = useCallback(async (verificationId) => {
     try {
-      const { error: deleteError } = await supabase
-        .from('signature_verifications')
-        .delete()
-        .eq('id', verificationId)
-        .eq('user_id', user.id)
-
-      if (deleteError) {
-        throw deleteError
-      }
-
-      // Refetch data
+      // Note: The in-memory backend storage doesn't support deletion
+      // In production, implement a DELETE /api/signatures/{signature_id} endpoint
+      console.warn('[useSignatureHistory] Deletion not yet implemented in backend')
+      
+      // For UI purposes, just refetch to ensure consistency
       await fetchVerifications()
-      return { success: true }
+      return { success: false, error: 'Deletion not yet implemented. Contact support.' }
     } catch (err) {
-      console.error('Error deleting verification:', err)
+      console.error('[useSignatureHistory] Error in delete handler:', err)
       return { success: false, error: err.message }
     }
-  }, [user?.id, fetchVerifications])
+  }, [fetchVerifications])
 
   /**
    * Export verification as image/PDF
@@ -186,14 +180,13 @@ export function useSignatureHistory() {
         data: {
           id: verification.id,
           name: verification.name,
-          confidence: verification.confidence,
           created_at: verification.created_at,
-          signature_data: verification.signatures?.signature_data,
+          signature_data: verification.signature?.signature_data,
           format
         }
       }
     } catch (err) {
-      console.error('Error exporting verification:', err)
+      console.error('[useSignatureHistory] Error exporting verification:', err)
       return { success: false, error: err.message }
     }
   }, [verifications])
@@ -220,15 +213,14 @@ export function useSignatureHistory() {
     
     // Search & Filters
     searchQuery,
+    setSearchQuery,
     handleSearchChange,
     dateFrom,
+    setDateFrom,
     handleDateFromChange,
     dateTo,
+    setDateTo,
     handleDateToChange,
-    confidenceMin,
-    handleConfidenceMinChange,
-    confidenceMax,
-    handleConfidenceMaxChange,
     
     // Actions
     deleteVerification,

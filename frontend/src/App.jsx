@@ -5,6 +5,7 @@ import RegistrationPage from './components/RegistrationPage'
 import LoginPage from './components/LoginPage'
 import SignatureCanvas from './components/SignatureCanvas'
 import SignatureHistory from './components/SignatureHistory'
+import FAQPage from './components/FAQPage'
 import { useAuth } from './hooks/useAuth'
 import { apiClient } from './utils/api'
 
@@ -13,7 +14,8 @@ function App() {
   const { user, session, isLoading: authLoading, error: authError, signOut } = useAuth()
 
   // Page routing state
-  const [currentPage, setCurrentPage] = useState('landing') // 'landing' | 'register' | 'login' | 'app' | 'history'
+  const [currentPage, setCurrentPage] = useState('landing') // 'landing' | 'register' | 'login' | 'app' | 'history' | 'faq'
+  const [faqSource, setFaqSource] = useState(null) // Track where FAQ was accessed from
   const [step, setStep] = useState(1)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -141,13 +143,12 @@ function App() {
   }
 
   const handleLoginSuccess = () => {
-    // After successful login, wait briefly then navigate to app
-    setTimeout(() => {
-      setCurrentPage('app')
-      setStep(1)
-      setResult(null)
-      setError(null)
-    }, 1500)
+    // Navigate directly to signature canvas
+    // Skeleton screen in LoginPage provides visual continuity during transition
+    setCurrentPage('app')
+    setStep(1)
+    setResult(null)
+    setError(null)
   }
 
   const handleNavigateToLogin = () => {
@@ -169,9 +170,41 @@ function App() {
     setCurrentPage('history')
   }
 
+  const handleNavigateToFAQ = (source) => {
+    setFaqSource(source)
+    setCurrentPage('faq')
+  }
+
+  const handleFAQBack = () => {
+    if (faqSource === 'landing') {
+      setCurrentPage('landing')
+      setFaqSource(null)
+    } else if (faqSource === 'history') {
+      setCurrentPage('history')
+      setFaqSource(null)
+    } else {
+      // Default: return to app
+      setCurrentPage('app')
+      setStep(1)
+      setFaqSource(null)
+    }
+  }
+
   const handleHistoryBack = () => {
     setCurrentPage('app')
     setStep(1)
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (err) {
+      console.error('Sign out error:', err)
+    } finally {
+      // Navigate to landing page after sign out
+      setCurrentPage('landing')
+      handleReset()
+    }
   }
 
   // Loading auth state
@@ -208,7 +241,7 @@ function App() {
 
   // Route: Landing page
   if (currentPage === 'landing') {
-    return <LandingPage onStartSigning={handleStartSigning} />
+    return <LandingPage onStartSigning={handleStartSigning} onNavigateToLogin={handleNavigateToLogin} onFAQ={() => handleNavigateToFAQ('landing')} />
   }
 
   // Route: Registration page (unauthenticated)
@@ -238,11 +271,12 @@ function App() {
         onComplete={handleSignaturesComplete} 
         onBack={handleBackToLanding}
         onHistory={handleNavigateToHistory}
+        onFAQ={() => handleNavigateToFAQ('app')}
         error={error}
         loading={loading}
         userId={userId}
         user={user}
-        onSignOut={signOut}
+        onSignOut={handleSignOut}
       />
     )
   }
@@ -252,8 +286,22 @@ function App() {
     return (
       <SignatureHistory 
         onBack={handleHistoryBack}
+        userId={userId}
         user={user}
-        onSignOut={signOut}
+        onFAQ={() => handleNavigateToFAQ('history')}
+        onSignOut={handleSignOut}
+      />
+    )
+  }
+
+  // Route: FAQ Page
+  if (currentPage === 'faq') {
+    return (
+      <FAQPage 
+        onBack={handleFAQBack}
+        onHistory={handleNavigateToHistory}
+        onSignOut={handleSignOut}
+        user={user}
       />
     )
   }

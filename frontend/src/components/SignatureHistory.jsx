@@ -3,23 +3,7 @@ import { useSignatureHistory } from '../hooks/useSignatureHistory'
 import SignatureHistoryTable from './SignatureHistoryTable'
 import './SignatureHistory.css'
 
-/**
- * SignatureHistory Component
- * 
- * Main page for viewing signature verification history
- * Features:
- * - Search by filename
- * - Filter by date range
- * - Filter by confidence range
- * - Pagination (50 per page)
- * - View, share, and delete verifications
- * 
- * Props:
- * - onBack: Callback to navigate back
- * - user: Current authenticated user
- * - onSignOut: Callback for sign out
- */
-export function SignatureHistory({ onBack, user, onSignOut }) {
+export function SignatureHistory({ onBack, userId, user, onFAQ, onSignOut }) {
   // Get all the history management from hook
   const {
     verifications,
@@ -32,21 +16,18 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
     setDateFrom,
     dateTo,
     setDateTo,
-    confidenceMin,
-    setConfidenceMin,
-    confidenceMax,
-    setConfidenceMax,
     loading,
     error,
     setPage,
     deleteVerification,
     exportVerification
-  } = useSignatureHistory()
+  } = useSignatureHistory(userId)
 
   // UI state for filters and modal
   const [showFilters, setShowFilters] = useState(false)
   const [selectedVerification, setSelectedVerification] = useState(null)
   const [showViewModal, setShowViewModal] = useState(false)
+  const [showAccountMenu, setShowAccountMenu] = useState(false)
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -73,6 +54,9 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
 
   // Handle view verification details
   const handleView = (verification) => {
+    console.log('[SignatureHistory] Viewing verification:', verification)
+    console.log('[SignatureHistory] Signature data available:', !!verification.signature?.signature_data)
+    console.log('[SignatureHistory] Signature data points:', verification.signature?.signature_data?.length || 0)
     setSelectedVerification(verification)
     setShowViewModal(true)
   }
@@ -82,40 +66,75 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
     setSearchQuery('')
     setDateFrom(null)
     setDateTo(null)
-    setConfidenceMin(0)
-    setConfidenceMax(100)
   }
 
   // Check if any filters are active
-  const hasActiveFilters = searchQuery || dateFrom || dateTo || confidenceMin > 0 || confidenceMax < 100
+  const hasActiveFilters = searchQuery || dateFrom || dateTo
 
   return (
     <div className="signature-history-page">
       {/* Header */}
-      <header className="history-header">
-        <div className="header-content">
-          <div className="header-title">
+      <header className="signature-header">
+        <nav className="signature-nav">
+          <div className="logo">AeroSign</div>
+          <div className="nav-links desktop-only">
             <button 
-              className="btn-back"
+              className="nav-link-btn" 
               onClick={onBack}
               title="Back to signature capture"
-              aria-label="Back to signature capture"
+              aria-label="Go to signature capture"
             >
-              <span className="material-symbols-outlined">arrow_back</span>
+              Capture
             </button>
-            <h1>Signature History</h1>
+            <a href="#" className="nav-link active">History</a>
           </div>
-          
-          <button
-            className="btn-sign-out"
-            onClick={onSignOut}
-            title="Sign out"
-            aria-label="Sign out"
-          >
-            <span className="material-symbols-outlined">logout</span>
-          </button>
-        </div>
+          <div className="nav-icons">
+            <button 
+              className="icon-btn" 
+              title="FAQ & Help" 
+              aria-label="FAQ and help"
+              onClick={onFAQ}
+            >
+              <span className="material-symbols-outlined">help</span>
+            </button>
+            <button 
+              className="icon-btn" 
+              title="Account" 
+              aria-label="Account menu"
+              onClick={() => setShowAccountMenu(!showAccountMenu)}
+            >
+              <span className="material-symbols-outlined">account_circle</span>
+            </button>
+            {showAccountMenu && (
+              <div className="account-dropdown">
+                <button 
+                  className="dropdown-item"
+                  onClick={() => {
+                    setShowAccountMenu(false)
+                    // Navigate to settings - you can add onSettings prop
+                  }}
+                >
+                  <span className="material-symbols-outlined">settings</span>
+                  Settings
+                </button>
+                <button 
+                  className="dropdown-item logout"
+                  onClick={() => {
+                    setShowAccountMenu(false)
+                    onSignOut()
+                  }}
+                >
+                  <span className="material-symbols-outlined">logout</span>
+                  Log Out
+                </button>
+              </div>
+            )}
+          </div>
+        </nav>
+      </header>
 
+      {/* Search and Filters Header */}
+      <div className="history-search-header">
         {/* Search Bar */}
         <div className="search-section">
           <div className="search-input-wrapper">
@@ -177,36 +196,6 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
               />
             </div>
 
-            <div className="filter-group">
-              <label htmlFor="confidence-min">
-                Min Confidence: {confidenceMin}%
-              </label>
-              <input
-                id="confidence-min"
-                type="range"
-                className="filter-slider"
-                min="0"
-                max="100"
-                value={confidenceMin}
-                onChange={(e) => setConfidenceMin(parseInt(e.target.value))}
-              />
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="confidence-max">
-                Max Confidence: {confidenceMax}%
-              </label>
-              <input
-                id="confidence-max"
-                type="range"
-                className="filter-slider"
-                min="0"
-                max="100"
-                value={confidenceMax}
-                onChange={(e) => setConfidenceMax(parseInt(e.target.value))}
-              />
-            </div>
-
             {hasActiveFilters && (
               <button
                 className="btn-reset-filters"
@@ -217,7 +206,7 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
             )}
           </div>
         )}
-      </header>
+      </div>
 
       {/* Main Content */}
       <main className="history-main">
@@ -278,16 +267,6 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
                 </p>
               </div>
 
-              <div className="detail-section">
-                <label>Confidence Score</label>
-                <p>
-                  <strong>{selectedVerification.confidence.toFixed(2)}%</strong>
-                  <span className={`confidence-badge ${selectedVerification.confidence >= 70 ? 'high' : selectedVerification.confidence >= 50 ? 'medium' : 'low'}`}>
-                    {selectedVerification.confidence >= 70 ? 'High' : selectedVerification.confidence >= 50 ? 'Medium' : 'Low'}
-                  </span>
-                </p>
-              </div>
-
               {selectedVerification.details && (
                 <div className="detail-section">
                   <label>Additional Details</label>
@@ -302,6 +281,7 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
                     <canvas
                       ref={(canvas) => {
                         if (canvas && selectedVerification.signature?.signature_data) {
+                          console.log('[SignatureHistory] Rendering signature with', selectedVerification.signature.signature_data.length, 'points')
                           const ctx = canvas.getContext('2d')
                           ctx.fillStyle = '#ffffff'
                           ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -309,7 +289,9 @@ export function SignatureHistory({ onBack, user, onSignOut }) {
                           // Lazy import to avoid issues
                           import('../utils/signatureRenderer').then(({ drawSignature, getSignatureBoundingBox, calculateScale }) => {
                             const bbox = getSignatureBoundingBox(selectedVerification.signature.signature_data)
+                            console.log('[SignatureHistory] Bounding box:', bbox)
                             const { scale, offsetX, offsetY } = calculateScale(bbox, canvas.width, canvas.height, 20)
+                            console.log('[SignatureHistory] Scale:', scale, 'Offset:', offsetX, offsetY)
                             drawSignature(ctx, selectedVerification.signature.signature_data, {
                               lineColor: '#006398',
                               lineWidth: 2,

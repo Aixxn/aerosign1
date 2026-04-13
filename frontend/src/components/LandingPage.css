@@ -67,7 +67,31 @@
   color: #0369a1;
 }
 
+.nav-link-btn {
+  background: none;
+  border: none;
+  color: var(--on-surface-variant);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.nav-link-btn:hover {
+  background: rgba(3, 105, 161, 0.08);
+  color: #0369a1;
+}
+
+.nav-link-btn:active {
+  transform: scale(0.95);
+}
+
 .nav-icons {
+  position: relative;
   display: flex;
   gap: 0.75rem;
 }
@@ -87,6 +111,72 @@
 
 .icon-btn:hover {
   background: rgba(3, 105, 161, 0.08);
+}
+
+.account-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  margin-top: 0.5rem;
+  z-index: 1000;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--on-surface, #1a1a1a);
+  font-size: 0.875rem;
+  font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.dropdown-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-item.logout {
+  color: #d32f2f;
+  border-top: 1px solid #e0e0e0;
+}
+
+.dropdown-item.logout:hover {
+  background-color: rgba(211, 47, 47, 0.08);
+}
+
+.dropdown-item .material-symbols-outlined {
+  font-size: 1.25rem;
 }
 
 /* Main Content */
@@ -201,11 +291,7 @@
   background: #000;
   aspect-ratio: 16 / 9;
   width: 100%;
-  max-width: 600px;
   overflow: hidden;
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   transition: all 0.3s ease;
 }
 
@@ -240,9 +326,9 @@
 }
 
 .tracking-box {
-  width: 75%;
-  height: 75%;
-  border: 1px solid rgba(100, 181, 246, 0.3);
+  width: 100%;
+  height: 100%;
+  border: none;
   border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
@@ -264,28 +350,28 @@
 }
 
 .tracking-info.top-left {
-  top: 1rem;
-  left: 1rem;
+  top: 0.75rem;
+  left: 0.75rem;
 }
 
 .tracking-info.bottom-right {
-  bottom: 1rem;
-  right: 1rem;
+  bottom: 0.75rem;
+  right: 0.75rem;
   text-align: right;
 }
 
 .signature-animation {
-  width: 50%;
-  height: 50%;
+  width: 45%;
+  height: 45%;
   color: var(--primary-container);
-  opacity: 0.5;
+  opacity: 0.7;
   transition: all 0.3s ease;
-  filter: drop-shadow(0 0 8px currentColor);
+  filter: drop-shadow(0 0 12px currentColor);
 }
 
 @keyframes signature-glow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.9; }
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 /* Glass Controls */

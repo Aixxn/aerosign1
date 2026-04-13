@@ -2,17 +2,7 @@ import { useState } from 'react'
 import SignatureThumbnail from './SignatureThumbnail'
 import { downloadCanvasPNG } from '../utils/signatureRenderer'
 
-/**
- * SignatureHistoryRow Component
- * 
- * Displays a single signature verification record in the history table
- * Shows: thumbnail | filename | date/time | confidence | actions
- * 
- * Props:
- * - verification: Verification record with id, name, created_at, confidence, signature (joined data)
- * - onDelete: Callback function for delete action
- * - onView: Callback function for view action
- */
+
 export function SignatureHistoryRow({ verification, onDelete, onView }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [sharing, setSharing] = useState(false)
@@ -26,7 +16,6 @@ export function SignatureHistoryRow({ verification, onDelete, onView }) {
     id, 
     name = 'Verification', 
     created_at, 
-    confidence = 0,
     signature = {} 
   } = verification
 
@@ -118,8 +107,8 @@ export function SignatureHistoryRow({ verification, onDelete, onView }) {
         <div className="thumbnail-container">
           <SignatureThumbnail 
             signatureData={signatureData}
-            width={120}
-            height={80}
+            width={90}
+            height={60}
             borderRadius="var(--radius-md)"
           />
         </div>
@@ -137,24 +126,6 @@ export function SignatureHistoryRow({ verification, onDelete, onView }) {
         <div className="datetime-container">
           <span className="date">{dateStr}</span>
           <span className="time">{timeStr}</span>
-        </div>
-      </td>
-
-      {/* Confidence */}
-      <td className="cell-confidence">
-        <div className="confidence-container">
-          <div className="confidence-bar">
-            <div 
-              className="confidence-fill"
-              style={{
-                width: `${Math.min(confidence, 100)}%`,
-                backgroundColor: confidence >= 70 ? '#006e1c' : confidence >= 50 ? '#fc9600' : '#ba1a1a'
-              }}
-            />
-          </div>
-          <span className="confidence-text">
-            {confidence.toFixed(1)}%
-          </span>
         </div>
       </td>
 

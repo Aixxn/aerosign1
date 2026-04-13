@@ -1,22 +1,6 @@
 import SignatureHistoryRow from './SignatureHistoryRow'
 
-/**
- * SignatureHistoryTable Component
- * 
- * Displays the signature verification history in a table format
- * Handles pagination display and row rendering
- * 
- * Props:
- * - verifications: Array of verification records to display
- * - totalCount: Total number of records in database
- * - page: Current page number (1-indexed)
- * - pageSize: Number of records per page
- * - onPageChange: Callback for pagination
- * - onDelete: Callback for delete action
- * - onView: Callback for view action
- * - loading: Loading state
- * - error: Error message (if any)
- */
+
 export function SignatureHistoryTable({
   verifications = [],
   totalCount = 0,
@@ -46,7 +30,6 @@ export function SignatureHistoryTable({
               <th className="header-thumbnail">Signature</th>
               <th className="header-filename">Filename</th>
               <th className="header-datetime">Date & Time</th>
-              <th className="header-confidence">Confidence</th>
               <th className="header-actions">Actions</th>
             </tr>
           </thead>
@@ -98,7 +81,6 @@ export function SignatureHistoryTable({
             <th className="header-thumbnail">Signature</th>
             <th className="header-filename">Filename</th>
             <th className="header-datetime">Date & Time</th>
-            <th className="header-confidence">Confidence</th>
             <th className="header-actions">Actions</th>
           </tr>
         </thead>

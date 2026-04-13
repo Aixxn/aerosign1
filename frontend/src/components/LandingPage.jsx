@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './LandingPage.css'
 
-function LandingPage({ onStartSigning }) {
+function LandingPage({ onStartSigning, onNavigateToLogin, onFAQ }) {
   const [isHovering, setIsHovering] = useState(false)
 
   return (
@@ -12,15 +12,12 @@ function LandingPage({ onStartSigning }) {
           <div className="logo">AeroSign</div>
           <div className="nav-links desktop-only">
             <a href="#" className="nav-link active">Home</a>
-            <a href="#" className="nav-link">History</a>
+            <button className="nav-link-btn" onClick={onNavigateToLogin} title="View signature history">History</button>
             <a href="#" className="nav-link">Settings</a>
           </div>
           <div className="nav-icons">
-            <button className="icon-btn" title="Help" aria-label="Help">
+            <button className="icon-btn" title="Help" aria-label="Help" onClick={onFAQ}>
               <span className="material-symbols-outlined">help</span>
-            </button>
-            <button className="icon-btn" title="Account" aria-label="Account">
-              <span className="material-symbols-outlined">account_circle</span>
             </button>
           </div>
         </nav>

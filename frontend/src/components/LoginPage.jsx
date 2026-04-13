@@ -1,17 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import SignatureCanvasSkeleton from './SignatureCanvasSkeleton'
 import './LoginPage.css'
 
-/**
- * LoginPage Component
- * 
- * Full-page login experience with Supabase Auth integration.
- * Matches Material 3 design with minimal underline input style.
- * 
- * Props:
- * - onSuccess: callback when login succeeds (receives user object)
- * - onNavigateToRegister: callback to navigate to registration page
- */
+
 export default function LoginPage({ onSuccess, onNavigateToRegister }) {
   // Form state
   const [formData, setFormData] = useState({
@@ -26,12 +18,26 @@ export default function LoginPage({ onSuccess, onNavigateToRegister }) {
   const [fieldErrors, setFieldErrors] = useState({})
   const [success, setSuccess] = useState(false)
 
-  // Auto-redirect on success
+  // Prevent body scroll during loading/transition
+  useEffect(() => {
+    if (loading || success) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [loading, success])
+
+  // Handle login success - show skeleton while transitioning to SignatureCanvas
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => {
         onSuccess?.()
-      }, 1500)
+        setLoading(false)
+      }, 1800)
       return () => clearTimeout(timer)
     }
   }, [success, onSuccess])
@@ -76,7 +82,6 @@ export default function LoginPage({ onSuccess, onNavigateToRegister }) {
     }
   }
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
@@ -119,15 +124,18 @@ export default function LoginPage({ onSuccess, onNavigateToRegister }) {
       } else {
         setError(errorMessage)
       }
-    } finally {
+      // Hide loading skeleton on error so user can see error message and retry
       setLoading(false)
     }
   }
 
   return (
     <div className="login-page">
-      {/* Main Content */}
-      <main className="login-main">
+      {/* Skeleton during authentication loading */}
+      {loading && <SignatureCanvasSkeleton />}
+
+      {/* Main Content - Hidden during loading */}
+      <main className="login-main" style={{ display: loading ? 'none' : 'flex' }}>
         {/* Abstract Background Elements */}
         <div className="login-background-blur" aria-hidden="true"></div>
 
@@ -148,17 +156,6 @@ export default function LoginPage({ onSuccess, onNavigateToRegister }) {
                 <h2 className="login-card-title">Welcome Back</h2>
                 <p className="login-card-description">Access your secure signing environment.</p>
               </div>
-
-              {/* Success Banner */}
-              {success && (
-                <div className="login-banner login-banner-success" role="alert" aria-live="polite">
-                  <span className="material-symbols-outlined">check_circle</span>
-                  <div>
-                    <p className="banner-title">Login Successful!</p>
-                    <p className="banner-text">Redirecting to signature canvas...</p>
-                  </div>
-                </div>
-              )}
 
               {/* Error Banner */}
               {error && (
@@ -289,8 +286,8 @@ export default function LoginPage({ onSuccess, onNavigateToRegister }) {
         </div>
       </main>
 
-      {/* Right Side Graphic Panel (Desktop only) */}
-      <aside className="login-side-panel" aria-hidden="true">
+      {/* Right Side Graphic Panel (Desktop only) - Hidden during loading */}
+      <aside className="login-side-panel" aria-hidden="true" style={{ display: loading ? 'none' : 'flex' }}>
         <div className="login-side-panel-content">
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4DE8NeJ5d3PBejBda1He7Ts8vqtCaOK7ucNRXOU4n0tDHidOHUsvqAqrKWS1dU2WNOpFHmp59INJH8HcnIBgkMJ1jAC-foqSeMD0CfHFziPTdOnbG231QP9Iy-M4Eqjuk6--2MDnTkeIup0sCHezOBzZkKP-rlp5-SvAFMLqJLvy2EiMrtg8RlDkJHbQGhS9VMMUD2RqNW4_AYbexwO5rlbj3R7XT-l4k3_aBfFW6tEEBRTA8UF70tl4E___s_Y0MrItPicGKsk4z"

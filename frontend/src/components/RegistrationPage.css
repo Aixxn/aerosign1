@@ -1,154 +1,575 @@
-/* ============================================================================
-   REGISTRATION PAGE STYLES
-   Material 3 Design System
-   ============================================================================ */
 
-/* Viewport clip radius for left panel */
-.signature-viewport-clip {
-  border-radius: 0 0.5rem 0 0.5rem;
+.reg-page {
+  min-height: 100vh;
+  background: var(--surface);           /* #f7f9ff — matches screenshot bg */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem 6rem;
+  font-family: var(--font-body);
+  position: relative;
 }
 
-/* Glass panel effect */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+/* ── Shared card container ── */
+.reg-left,
+.reg-right {
+  /* The card itself has no shadow — matches the screenshot (shadow-none) */
+  background: transparent;
 }
 
-/* Material Symbols font setup */
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
+/* Two-col grid wrapper  */
+.reg-page > .reg-left,
+.reg-page > .reg-right {
+  display: flex;
 }
 
-/* ============================================================================
-   RESPONSIVE DESIGN
-   ============================================================================ */
-
-/* Extra small screens (mobile) */
-@media (max-width: 374px) {
-  main {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  
-  .max-w-sm {
-    max-width: 100%;
-  }
+/* Inner card grid */
+.reg-page {
+  /* override flex to grid for the two panels */
 }
 
-/* Small screens (375px - 639px) */
-@media (min-width: 375px) and (max-width: 639px) {
-  main {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 3rem;
-    padding-bottom: 3rem;
-  }
-  
-  input[type="text"],
-  input[type="email"],
-  input[type="password"] {
-    padding-top: 0.625rem;
-    padding-bottom: 0.625rem;
-  }
+/* Simpler: wrap left+right in a card div via CSS grid on reg-page children */
+.reg-left {
+  background: var(--surface-container-low);   /* #f1f4f9 */
+  border-radius: 0 0.5rem 0 0.5rem;           /* signature-viewport-clip */
+  padding: 3rem;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 560px;
+  display: none;                              /* hidden on mobile, shown md+ */
 }
 
-/* Medium screens (640px - 767px) */
-@media (min-width: 640px) and (max-width: 767px) {
-  main {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-  }
+.reg-right {
+  background: var(--surface);                 /* #f7f9ff */
+  padding: 2rem 4rem;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 560px;
+  display: flex;
 }
 
-/* Tablet and larger (768px+) */
+/* ── Desktop: side-by-side as a floating card ── */
 @media (min-width: 768px) {
-  .signature-viewport-clip {
-    border-radius: 0 0.5rem 0 0.5rem;
+  .reg-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .reg-left {
+    display: flex;
+    max-width: 560px;
+    min-height: 680px;
+  }
+
+  .reg-right {
+    max-width: 560px;
+    min-height: 680px;
   }
 }
 
-/* Desktop (1024px+) */
-@media (min-width: 1024px) {
-  main {
-    padding-top: 1.5rem;
-    padding-bottom: 1.5rem;
-  }
-  
-  .max-w-6xl {
-    max-width: 90rem;
-  }
+/* ── LEFT PANEL ── */
+.reg-left-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
 }
 
-/* ============================================================================
-   FORM INTERACTIONS
-   ============================================================================ */
+/* Brand row */
+.reg-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-/* Input focus states */
-input:focus {
+.reg-brand-name {
+  font-family: var(--font-headline);
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--on-surface);
+  letter-spacing: -0.03em;
+}
+
+.reg-brand-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* Headline */
+.reg-headline {
+  font-family: var(--font-headline);
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--on-surface);
+  margin: 0;
+}
+
+/* Subhead */
+.reg-subhead {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--on-surface-variant);
+  max-width: 28rem;
+  margin: 0;
+}
+
+/* ── Preview card ── */
+.reg-preview-outer {
+  position: relative;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.reg-preview-glow {
+  position: absolute;
+  inset: -1rem;
+  background: rgba(100, 181, 246, 0.15);
+  border-radius: 1rem;
+  filter: blur(1.5rem);
+  pointer-events: none;
+}
+
+.reg-preview-card {
+  position: relative;
+  background: var(--surface-container-lowest);   /* white */
+  border-radius: 0 0.5rem 0 0.5rem;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid rgba(192, 199, 209, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dot grid overlay */
+.reg-dotgrid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* Icons cluster in centre */
+.reg-preview-icons {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1;
+}
+
+.reg-icon-android {
+  font-size: 2.5rem !important;
+  color: var(--on-surface-variant);
+  opacity: 0.7;
+}
+
+.reg-icon-fp {
+  font-size: 2.5rem !important;
+  color: var(--primary-container);
+}
+
+/* Mono label */
+.reg-preview-mono {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--outline);
+  margin-top: 0.75rem;
+}
+
+/* Footer row inside card */
+.reg-preview-footer {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.reg-preview-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reg-status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--secondary);
+  flex-shrink: 0;
+}
+
+.reg-status-calibrated {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--on-surface);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.reg-status-latency {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--outline);
+  line-height: 1.4;
+}
+
+.reg-sig-svg {
+  width: 4rem;
+  height: auto;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+
+/* ── RIGHT PANEL ── */
+.reg-form-wrap {
+  max-width: 22rem;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.reg-form-header {
+  margin-bottom: 2.5rem;
+}
+
+.reg-form-title {
+  font-family: var(--font-headline);
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--on-surface);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.375rem;
+}
+
+.reg-form-subtitle {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+}
+
+/* Banners */
+.reg-banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.reg-banner--success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+.reg-banner--error {
+  background: var(--error-container);
+  border: 1px solid var(--error);
+  color: var(--on-error-container);
+}
+
+/* Form */
+.reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Field group */
+.reg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+}
+
+/* Label */
+.reg-label {
+  font-family: var(--font-label);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--outline);
+  display: block;
+  margin-bottom: 0.125rem;
+  transition: color 0.2s;
+}
+
+.reg-field:focus-within .reg-label {
+  color: var(--primary);
+}
+
+/* Input wrapper */
+.reg-input-wrap {
+  position: relative;
+}
+
+/* Input */
+.reg-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(192, 199, 209, 0.6);
+  padding: 0.5rem 0;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--on-surface);
   outline: none;
+  transition: border-color 0.2s;
+  display: block;
 }
 
-/* Password toggle button positioning */
-.absolute.right-0.bottom-2 {
-  padding: 0.5rem;
+.reg-input::placeholder {
+  color: var(--surface-dim);
 }
 
-/* Error text styling */
-.text-error {
+.reg-input:focus {
+  border-bottom-color: var(--primary);
+}
+
+.reg-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Password toggle */
+.reg-input-wrap--pw .reg-input {
+  padding-right: 2rem;
+}
+
+.reg-pw-toggle {
+  position: absolute;
+  right: 0;
+  bottom: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--outline-variant);
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.reg-pw-toggle:hover {
+  color: var(--primary);
+}
+
+.reg-pw-toggle .material-symbols-outlined {
+  font-size: 1.125rem !important;
+}
+
+.reg-pw-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Field error */
+.reg-field-error {
+  font-size: 0.75rem;
   color: var(--error);
+  margin-top: 0.25rem;
+  font-family: var(--font-label);
 }
 
-/* ============================================================================
-   ACCESSIBILITY
-   ============================================================================ */
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* Terms row */
+.reg-terms-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: more) {
-  input,
-  button {
-    border-width: 2px;
-  }
+.reg-checkbox {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  border: 1.5px solid var(--outline-variant);
+  border-radius: 0.125rem;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 
-/* ============================================================================
-   PRINT STYLES
-   ============================================================================ */
+.reg-terms-label {
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+  line-height: 1.55;
+  cursor: pointer;
+}
 
-@media print {
-  body {
-    background-color: white;
-  }
+.reg-link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
 
-  .md\:hidden,
-  .fixed {
+.reg-link:hover {
+  text-decoration: underline;
+}
+
+/* Submit wrapper + button */
+.reg-submit-wrap {
+  padding-top: 0.25rem;
+}
+
+.reg-submit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+  color: var(--on-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-headline);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 99, 152, 0.2);
+  transition: filter 0.2s, transform 0.1s, box-shadow 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.reg-submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 28px rgba(0, 99, 152, 0.3);
+}
+
+.reg-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.reg-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reg-submit .material-symbols-outlined {
+  font-size: 1.125rem !important;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.reg-spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+/* Footer */
+.reg-footer {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+.reg-footer-text {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+}
+
+.reg-signin-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.25rem;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: text-decoration 0.15s;
+}
+
+.reg-signin-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.reg-signin-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Mobile status bar ── */
+.reg-mobile-bar {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  pointer-events: none;
+}
+
+.reg-mobile-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.reg-mobile-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--secondary);
+  flex-shrink: 0;
+}
+
+.reg-mobile-text {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.15em;
+  color: var(--on-surface);
+  text-transform: uppercase;
+}
+
+@media (min-width: 768px) {
+  .reg-mobile-bar {
     display: none;
   }
+}
 
-  button {
-    border: 1px solid #000;
+/* ── Accessibility ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

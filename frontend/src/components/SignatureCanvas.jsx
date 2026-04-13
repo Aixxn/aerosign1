@@ -2,9 +2,7 @@ import { useRef, useEffect, useState, useCallback } from 'react'
 import './SignatureCanvas.css'
 import { apiClient, saveSignature, verifyAgainstUser, generateSessionId } from '../utils/api'
 
-// ============================================================================
-// EXPONENTIAL SMOOTHING - For stabilizing shaky hand tracking
-// ============================================================================
+
 class ExponentialSmoothing {
   constructor(alpha = 0.2) {
     this.alpha = alpha              // Smoothing factor (0 < alpha <= 1)
@@ -31,7 +29,7 @@ class ExponentialSmoothing {
   }
 }
 
-function SignatureCanvas({ onComplete, onBack, onHistory, error: appError, loading: appLoading, userId = 'user_default', user, onSignOut }) {
+function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError, loading: appLoading, userId = 'user_default', user, onSignOut }) {
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -47,6 +45,7 @@ function SignatureCanvas({ onComplete, onBack, onHistory, error: appError, loadi
   const [handPosition, setHandPosition] = useState({ x: 0, y: 0 })
   const [isCapturing, setIsCapturing] = useState(false)
   const [modelConnectionStatus, setModelConnectionStatus] = useState('checking') // 'online', 'offline', 'checking'
+  const [showAccountMenu, setShowAccountMenu] = useState(false)
   
   // New state for signature storage
   const [saveStatus, setSaveStatus] = useState(null) // null, 'saving', 'saved', 'error'
@@ -248,11 +247,11 @@ function SignatureCanvas({ onComplete, onBack, onHistory, error: appError, loadi
         setSaveStatus('verification_result')
         
         if (verifyResponse.is_same_person) {
-          console.log('[FLOW] ✅ Same person detected! Saving signature now...')
-          setStatus(`✅ Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+          console.log('[FLOW] Same person detected! Saving signature now...')
+          setStatus(`Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
         } else {
-          console.log('[FLOW] ❌ Different person detected! Saving signature anyway...')
-          setStatus(`❌ Different person detected! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+          console.log('[FLOW] Different person detected! Saving signature anyway...')
+          setStatus(`Different person detected! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
         }
         
         // Now save the signature AFTER verification
@@ -261,7 +260,7 @@ function SignatureCanvas({ onComplete, onBack, onHistory, error: appError, loadi
       } catch (error) {
         console.error('[FLOW] Verification failed:', error)
         setSaveStatus('error')
-        setSaveMessage(`❌ Verification failed: ${error.message}`)
+        setSaveMessage(`Verification failed: ${error.message}`)
         setStatus('Verification failed. Try again.')
         
         setTimeout(() => {
@@ -616,12 +615,44 @@ function SignatureCanvas({ onComplete, onBack, onHistory, error: appError, loadi
           <div className="nav-icons">
             <button 
               className="icon-btn" 
-              title="Sign out" 
-              aria-label="Sign out"
-              onClick={onSignOut}
+              title="FAQ & Help" 
+              aria-label="FAQ and help"
+              onClick={onFAQ}
             >
-              <span className="material-symbols-outlined">logout</span>
+              <span className="material-symbols-outlined">help</span>
             </button>
+            <button 
+              className="icon-btn" 
+              title="Account" 
+              aria-label="Account menu"
+              onClick={() => setShowAccountMenu(!showAccountMenu)}
+            >
+              <span className="material-symbols-outlined">account_circle</span>
+            </button>
+            {showAccountMenu && (
+              <div className="account-dropdown">
+                <button 
+                  className="dropdown-item"
+                  onClick={() => {
+                    setShowAccountMenu(false)
+                    // Navigate to settings - you can add onSettings prop
+                  }}
+                >
+                  <span className="material-symbols-outlined">settings</span>
+                  Settings
+                </button>
+                <button 
+                  className="dropdown-item logout"
+                  onClick={() => {
+                    setShowAccountMenu(false)
+                    onSignOut()
+                  }}
+                >
+                  <span className="material-symbols-outlined">logout</span>
+                  Log Out
+                </button>
+              </div>
+            )}
           </div>
         </nav>
       </header>

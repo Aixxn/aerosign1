@@ -1,18 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { drawSignature, getSignatureBoundingBox, calculateScale } from '../utils/signatureRenderer'
 
-/**
- * SignatureThumbnail Component
- * 
- * Renders a signature on a canvas element with auto-scaling
- * Used in the signature history table for preview thumbnails
- * 
- * Props:
- * - signatureData: Array of [x, y, timestamp] points
- * - width: Canvas width (default: 120px)
- * - height: Canvas height (default: 80px)
- * - borderRadius: CSS border-radius (default: '4px')
- */
 export function SignatureThumbnail({ 
   signatureData, 
   width = 120, 
@@ -29,12 +17,10 @@ export function SignatureThumbnail({
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     
-    // Set device pixel ratio for crisp rendering
     const dpr = window.devicePixelRatio || 1
     canvas.width = width * dpr
     canvas.height = height * dpr
     
-    // Scale context for high DPI displays
     ctx.scale(dpr, dpr)
     
     // Set white background
@@ -43,12 +29,24 @@ export function SignatureThumbnail({
 
     // Calculate bounding box for auto-scaling
     const bbox = getSignatureBoundingBox(signatureData)
-    const { scale, offsetX, offsetY } = calculateScale(bbox, width, height, 8)
+    
+    // Increase padding to make signature smaller in thumbnail
+    const padding = 15
+    const availableWidth = width - padding * 2
+    const availableHeight = height - padding * 2
+    
+    // Calculate scale to fit signature within available space
+    const scaleX = availableWidth / bbox.width
+    const scaleY = availableHeight / bbox.height
+    const scale = Math.min(scaleX, scaleY, 1)
+    
+    // Calculate offset to center signature with padding
+    const offsetX = padding - bbox.minX * scale
+    const offsetY = padding - bbox.minY * scale
 
-    // Draw the signature
     drawSignature(ctx, signatureData, {
-      lineColor: '#006398',
-      lineWidth: 1.5,
+      lineColor: '#000000',
+      lineWidth: 1,
       lineCap: 'round',
       lineJoin: 'round',
       scale,
