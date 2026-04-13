@@ -27,6 +27,7 @@ class StoredSignature:
             "signature_id": self.signature_id,
             "user_id": self.user_id,
             "session_id": self.session_id,
+            "signature_data": self.signature_data,
             "point_count": len(self.signature_data),
             "saved_at": self.saved_at.isoformat(),
             "metadata": self.metadata
