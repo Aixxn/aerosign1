@@ -3,11 +3,14 @@
   min-height: 100vh;
   background: var(--surface);           /* #f7f9ff — matches screenshot bg */
   display: flex;
+  flex-direction: column;               /* stack on mobile */
   align-items: center;
   justify-content: center;
-  padding: 3rem 1.5rem 6rem;
+  padding: 2rem 1rem 5rem;              /* mobile-first padding */
   font-family: var(--font-body);
   position: relative;
+  width: 100%;
+  gap: 2rem;                            /* space between panels */
 }
 
 /* ── Shared card container ── */
@@ -31,41 +34,65 @@
 /* Simpler: wrap left+right in a card div via CSS grid on reg-page children */
 .reg-left {
   background: var(--surface-container-low);   /* #f1f4f9 */
-  border-radius: 0 0.5rem 0 0.5rem;           /* signature-viewport-clip */
-  padding: 3rem;
+  border-radius: 0.5rem;                      /* responsive radius */
+  padding: 2rem 1.5rem;                       /* reduced mobile padding */
   flex-direction: column;
   justify-content: space-between;
   width: 100%;
-  max-width: 560px;
+  max-width: 100%;                            /* full width on mobile */
   display: none;                              /* hidden on mobile, shown md+ */
+  gap: 1.5rem;                                /* space inside left panel */
 }
 
 .reg-right {
   background: var(--surface);                 /* #f7f9ff */
-  padding: 2rem 4rem;
+  padding: 2rem 1rem;                        /* mobile-first padding */
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  max-width: 560px;
+  max-width: 100%;                           /* full width on mobile */
   display: flex;
+  min-height: auto;                          /* flexible height */
 }
 
 /* ── Desktop: side-by-side as a floating card ── */
 @media (min-width: 768px) {
   .reg-page {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: row;                /* side-by-side */
+    padding: 2rem;                      /* desktop padding */
+    gap: 0;                             /* no gap for side-by-side */
   }
 
   .reg-left {
     display: flex;
-    max-width: 560px;
+    max-width: 480px;                  /* reasonable max width */
+    min-height: 600px;
+    padding: 3rem;
+    border-radius: 0.5rem 0 0 0.5rem; /* left side radius */
+    flex: 0 0 auto;
+  }
+
+  .reg-right {
+    max-width: 480px;
+    min-height: 600px;
+    padding: 3rem 4rem;
+    border-radius: 0 0.5rem 0.5rem 0; /* right side radius */
+    flex: 0 0 auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .reg-page {
+    padding: 3rem 2rem;
+  }
+
+  .reg-left {
+    max-width: 520px;
     min-height: 680px;
   }
 
   .reg-right {
-    max-width: 560px;
+    max-width: 520px;
     min-height: 680px;
   }
 }
@@ -87,7 +114,7 @@
 
 .reg-brand-name {
   font-family: var(--font-headline);
-  font-size: 1.75rem;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);  /* responsive sizing */
   font-weight: 900;
   color: var(--on-surface);
   letter-spacing: -0.03em;
@@ -246,20 +273,32 @@
 
 /* ── RIGHT PANEL ── */
 .reg-form-wrap {
-  max-width: 22rem;
+  max-width: 100%;                     /* responsive width */
   width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
 }
 
+@media (min-width: 768px) {
+  .reg-form-wrap {
+    max-width: 22rem;                 /* constrained on desktop */
+  }
+}
+
 .reg-form-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;               /* reduced on mobile */
+}
+
+@media (min-width: 768px) {
+  .reg-form-header {
+    margin-bottom: 2.5rem;             /* desktop spacing */
+  }
 }
 
 .reg-form-title {
   font-family: var(--font-headline);
-  font-size: 1.625rem;
+  font-size: clamp(1.25rem, 4vw, 1.625rem);  /* responsive sizing */
   font-weight: 700;
   color: var(--on-surface);
   letter-spacing: -0.02em;
@@ -488,8 +527,14 @@
 
 /* Footer */
 .reg-footer {
-  margin-top: 3rem;
+  margin-top: 1.5rem;                  /* reduced on mobile */
   text-align: center;
+}
+
+@media (min-width: 768px) {
+  .reg-footer {
+    margin-top: 3rem;                  /* desktop spacing */
+  }
 }
 
 .reg-footer-text {
