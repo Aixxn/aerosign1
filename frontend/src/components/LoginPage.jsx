@@ -238,7 +238,7 @@ export default function LoginPage({ onSuccess, onNavigateToRegister }) {
                     <span className="status-dot"></span>
                     <span className="status-dot"></span>
                   </div>
-                  <span className="login-status-text">System Ready // AES-256 Validated</span>
+                  <span className="login-status-text">A service for your signature needs.</span>
                 </div>
 
                 {/* Submit Button */}

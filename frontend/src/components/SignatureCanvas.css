@@ -1059,6 +1059,38 @@
   font-size: 1rem;
 }
 
+.verify-another-btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.verify-another-btn:hover {
+  background: #0369a1;
+  box-shadow: 0 4px 12px rgba(3, 105, 161, 0.25);
+  transform: translateY(-2px);
+}
+
+.verify-another-btn:active {
+  transform: translateY(0);
+}
+
+.verify-another-btn .material-symbols-outlined {
+  font-size: 1.2rem;
+}
+
 /* Animations */
 @keyframes slideIn {
   from {

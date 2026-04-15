@@ -18,7 +18,6 @@ class ExponentialSmoothing {
       return measurement
     }
 
-    // Exponential moving average: S_t = α * X_t + (1 - α) * S_{t-1}
     this.smoothedValue = this.alpha * measurement + (1 - this.alpha) * this.smoothedValue
     return this.smoothedValue
   }
@@ -248,10 +247,10 @@ function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError
         
         if (verifyResponse.is_same_person) {
           console.log('[FLOW] Same person detected! Saving signature now...')
-          setStatus(`Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+          setStatus(`Same person verified!`)
         } else {
           console.log('[FLOW] Different person detected! Saving signature anyway...')
-          setStatus(`Different person detected! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+          setStatus(`Different person detected!`)
         }
         
         // Now save the signature AFTER verification
@@ -315,13 +314,13 @@ function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError
         console.log('[SAVE] Signature ID:', saveResponse.signature_id)
         
         setSaveStatus('saved')
-        setSaveMessage(`✅ Signature ${signatureNumber} saved successfully!`)
+        setSaveMessage(`Signature ${signatureNumber} saved successfully!`)
         setStatus(`Signature ${signatureNumber} saved! (ID: ${saveResponse.signature_id.substr(0, 8)}...)`)
 
         if (totalUserSignatures === 1) {
           // First signature saved - prepare for second
           console.log('[SAVE] First signature detected')
-          setSignatureNumber(2)
+          setSignatureNumber(totalUserSignatures + 1)
           currentStrokeRef.current = []
           savedStrokesRef.current = []
           isCapturingRef.current = false
@@ -381,11 +380,11 @@ function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError
       
       if (verifyResponse.is_same_person) {
         console.log('[DEBUG] Match found! Showing success message')
-        setStatus(`Same person verified! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        setStatus(`Same person verified! `)
         setSaveMessage(`Same person confirmed (${verifyResponse.total_signatures_checked} signatures checked)`)
       } else {
         console.log('[DEBUG] No match! Showing forgery alert')
-        setStatus(`FORGERY DETECTED - Different person! Confidence: ${verifyResponse.best_match_confidence.toFixed(1)}%`)
+        setStatus(`FORGERY DETECTED - Different person! `)
         setSaveMessage(`This signature does NOT match the enrolled user`)
       }
       
@@ -414,6 +413,24 @@ function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError
         setStatus('Ready for next signature - Press "Start Capture" or Z key')
       }, 15000)
     }
+  }
+
+  // Reset after verification to allow a new independent verification cycle
+  // Next signature will be treated as a fresh "First Signature"
+  const handleVerifyAnother = () => {
+    console.log('[RESET] Starting new verification cycle')
+    setVerificationResult(null)
+    setSaveStatus(null)
+    setSaveMessage('')
+    currentStrokeRef.current = []
+    savedStrokesRef.current = []
+    isCapturingRef.current = false
+    setIsCapturing(false)
+    setCollectedSignatures([])
+    setSavedSignatureIds([])
+    setSignatureNumber(1)
+    userSignatureCountRef.current = 0  // Reset so next capture is treated as first signature
+    setStatus('New verification cycle - Ready for first signature. Press "Start Capture" or Z key')
   }
 
   // Detect hands by sending frames to backend
@@ -952,7 +969,7 @@ function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError
           )}
 
           <div className="signature-progress">
-            Signature {signatureNumber} of 2 • {collectedSignatures.length}/2 completed
+            Signature {collectedSignatures.length + 1} of 2 
           </div>
 
           {/* Save Status Display */}
@@ -978,9 +995,6 @@ function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError
                 </span>
               </div>
               <div className="verification-details">
-                <div className="verification-confidence">
-                  Confidence: {verificationResult.best_match_confidence.toFixed(1)}%
-                </div>
                 <div className="verification-info">
                   Checked against {verificationResult.total_signatures_checked} saved signatures
                 </div>
@@ -990,6 +1004,14 @@ function SignatureCanvas({ onComplete, onBack, onHistory, onFAQ, error: appError
                   </div>
                 )}
               </div>
+              <button 
+                className="verify-another-btn"
+                onClick={handleVerifyAnother}
+                aria-label="Verify another signature"
+              >
+                <span className="material-symbols-outlined">refresh</span>
+                Verify Another
+              </button>
             </div>
           )}
 

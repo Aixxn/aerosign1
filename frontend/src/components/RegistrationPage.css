@@ -464,9 +464,16 @@
 }
 
 .reg-link {
+  background: none;
+  border: none;
+  padding: 0;
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  margin: 0;
 }
 
 .reg-link:hover {

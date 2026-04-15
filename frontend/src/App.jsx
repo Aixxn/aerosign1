@@ -130,7 +130,6 @@ function App() {
       return
     }
 
-    // If authenticated, go directly to signature canvas
     setCurrentPage('app')
     setStep(1)
     setResult(null)
@@ -138,12 +137,10 @@ function App() {
   }
 
   const handleRegistrationSuccess = () => {
-    // After successful registration, navigate to login page
     setCurrentPage('login')
   }
 
   const handleLoginSuccess = () => {
-    // Navigate directly to signature canvas
     // Skeleton screen in LoginPage provides visual continuity during transition
     setCurrentPage('app')
     setStep(1)
@@ -306,7 +303,7 @@ function App() {
     )
   }
 
-  // Results page - use old app layout
+  // Results page - use ol app layout
   return (
     <div className="app">
       <header className="header">

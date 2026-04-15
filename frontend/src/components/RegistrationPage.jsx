@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import ToSPPModal from './ToSPPModal'
 import './RegistrationPage.css'
 
 export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
@@ -17,6 +18,7 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
+  const [showToSPPModal, setShowToSPPModal] = useState(false)
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   const validatePassword = (password) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(password)
@@ -223,9 +225,27 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
                 disabled={loading} className="reg-checkbox" />
               <label htmlFor="terms" className="reg-terms-label">
                 I agree to the{' '}
-                <a href="#" className="reg-link">Terms of Service</a>
+                <button
+                  type="button"
+                  className="reg-link"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setShowToSPPModal(true)
+                  }}
+                >
+                  Terms of Service
+                </button>
                 {' '}and acknowledge the{' '}
-                <a href="#" className="reg-link">Privacy Policy</a>
+                <button
+                  type="button"
+                  className="reg-link"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setShowToSPPModal(true)
+                  }}
+                >
+                  Privacy Policy
+                </button>
                 {' '}regarding biometric data handling.
               </label>
             </div>
@@ -253,6 +273,9 @@ export default function RegistrationPage({ onSuccess, onNavigateToLogin }) {
           </footer>
         </div>
       </main>
+
+      {/* ToS/PP Modal */}
+      <ToSPPModal isOpen={showToSPPModal} onClose={() => setShowToSPPModal(false)} />
 
       {/* Mobile status bar */}
       <div className="reg-mobile-bar">

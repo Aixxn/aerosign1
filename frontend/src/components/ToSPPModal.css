@@ -1,0 +1,233 @@
+@import './menu.css';
+
+/* Modal Overlay */
+.tospp-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content */
+.tospp-modal-content {
+  background-color: var(--surface-container-lowest);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 700px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Header */
+.tospp-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.tospp-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: var(--font-headline);
+  color: var(--on-surface);
+}
+
+/* Close Button */
+.tospp-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  background-color: var(--surface-container-high);
+  color: var(--on-surface);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.tospp-modal-close:hover {
+  background-color: var(--surface-container);
+}
+
+.tospp-modal-close:active {
+  transform: scale(0.95);
+}
+
+/* Modal Body */
+.tospp-modal-body {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.tospp-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--on-surface);
+}
+
+.tospp-content p {
+  margin: 0.5rem 0;
+  padding: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.tospp-content p:first-child {
+  margin-top: 0;
+}
+
+/* Modal Footer */
+.tospp-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--outline-variant);
+  flex-wrap: wrap;
+}
+
+/* Page Indicator */
+.tospp-page-indicator {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+  margin: 0 0.5rem;
+}
+
+/* Buttons */
+.tospp-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.tospp-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.tospp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Secondary Button Style */
+.tospp-btn-secondary {
+  background-color: var(--surface-container-high);
+  color: var(--on-surface);
+  border: 1px solid var(--outline-variant);
+}
+
+.tospp-btn-secondary:hover:not(:disabled) {
+  background-color: var(--surface-container);
+  border-color: var(--outline);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .tospp-modal-content {
+    max-width: calc(100% - 1rem);
+    max-height: 90vh;
+  }
+
+  .tospp-modal-header {
+    padding: 1rem;
+  }
+
+  .tospp-modal-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .tospp-modal-close {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+
+  .tospp-modal-body {
+    padding: 1rem;
+  }
+
+  .tospp-content {
+    font-size: 0.85rem;
+  }
+
+  .tospp-modal-footer {
+    padding: 1rem;
+    flex-direction: column;
+  }
+
+  .tospp-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+
+  .tospp-page-indicator {
+    order: 3;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Scrollbar Styling */
+.tospp-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tospp-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tospp-modal-body::-webkit-scrollbar-thumb {
+  background: var(--outline-variant);
+  border-radius: 3px;
+}
+
+.tospp-modal-body::-webkit-scrollbar-thumb:hover {
+  background: var(--outline);
+}
