@@ -1,0 +1,33 @@
+{
+  "name": "IDOR on user-scoped signatures endpoint",
+  "actor": "user_bob",
+  "target": "user_alice",
+  "steps": [
+    {
+      "id": 1,
+      "action": "seed_victim_signature",
+      "endpoint": "/api/signatures/save",
+      "description": "Seed a baseline signature for user_alice"
+    },
+    {
+      "id": 2,
+      "action": "attack_get_user_signatures",
+      "endpoint": "/api/users/{user_id}/signatures",
+      "description": "Call Alice endpoint as user_bob"
+    },
+    {
+      "id": 3,
+      "action": "capture_attack_response",
+      "endpoint": "/api/users/{user_id}/signatures",
+      "description": "Capture HTTP status and response body"
+    }
+  ],
+  "expected_vulnerable": {
+    "cross_user_read_status": 200
+  },
+  "expected_mitigated": {
+    "cross_user_read_status": 403,
+    "cross_user_read_status_alt": 401
+  },
+  "stride_tags": ["T", "I", "E"]
+}
